@@ -1,5 +1,5 @@
 /**
- * Created by Administrator on 8/1/2016.
+ * Created by michael_du on 8/1/2016.
  */
 
 esprima = require("esprima");
@@ -30,6 +30,19 @@ function process_script(script_content) {
         }
         return false;
     }
+
+/*
+    // check if expression is undefined at two sides of BinaryExpression
+    function check_binary_expression(node) {
+        if (typeof node.left == 'undefined' && typeof node.right == 'undefined') {
+            var ret = eval.call(global, escodegen.generate(node));
+            return (typeof ret == 'undefined');
+        }
+        var ret_left = check_binary_expression(node.left);
+        var ret_right = check_binary_expression(node.right);
+        return ret_left || ret_right
+    }
+*/
 
     //
     estraverse.traverse(ast, {
@@ -88,12 +101,10 @@ function process_script(script_content) {
                         // variable declaration for function
                         // example: function f489hir () {};
                         //
-                        /*
                         if (node.id.type == esprima.Syntax.Identifier) {
                             func_name_list.push(node.id.name);
                             eval.call(global, escodegen.generate(node));
                         }
-                        */
                         break;
                     }
                     case esprima.Syntax.ExpressionStatement: {
@@ -163,7 +174,7 @@ function process_script(script_content) {
                     var ret_val;
                     try {
                         ret_val = eval.call(global, call_exp);
-                        if (ret_val == undefined) break;
+                        if (ret_val == undefined || ret_val == null) break;
                         return {
                             type: esprima.Syntax.Literal,
                             value: ret_val,
@@ -177,6 +188,7 @@ function process_script(script_content) {
                 case esprima.Syntax.BinaryExpression: {
                     if (node.left.type == esprima.Syntax.Literal && node.right.type == esprima.Syntax.Literal) {
                         var ret_val = eval.call(global, escodegen.generate(node));
+                        if (ret_val == undefined || ret_val == null) break;
                         return {
                             type: esprima.Syntax.Literal,
                             value: ret_val,
@@ -186,17 +198,26 @@ function process_script(script_content) {
                     break;
                 }
                 case esprima.Syntax.MemberExpression: {
-                    if (node.computed == true && typeof node.property != "undefined" && node.property.type != esprima.Syntax.Literal) {
-                        var property_exp = escodegen.generate(node.property);
+                    if (node.computed == true && typeof node.property != "undefined"
+                        && node.property.type != esprima.Syntax.Literal
+                        && node.property.type != esprima.Syntax.Identifier) {
                         try {
-                            var property_val = eval.call(global, property_exp);
-                            if (property_val != undefined) {
-                                node.property = {
-                                    type: esprima.Syntax.Literal,
-                                    value: property_val,
-                                    raw: property_val
-                                };
-                            }
+                            //if (node.property.type == esprima.Syntax.BinaryExpression) {
+                                // Do nothing
+                                //if (true == check_binary_expression(node.property)) {
+                                //    console.log("find undefined in BinaryExpression");
+                                //}
+                            //} else {
+                                var property_exp = escodegen.generate(node.property);
+                                var property_val = eval.call(global, property_exp);
+                                if (property_val != undefined && property_val != null) {
+                                    node.property = {
+                                        type: esprima.Syntax.Literal,
+                                        value: property_val,
+                                        raw: property_val
+                                    };
+                                }
+                            //}
                         } catch (err) {
                             console.error("Error in calculate property_exp: " + err);
                         }
@@ -213,6 +234,10 @@ function process_script(script_content) {
         },
     });
 
+    // Output Syntax Tree
+    // console.log(JSON.stringify(ast, null, 4));
+
+    // Output JavaScript Code
     console.log(escodegen.generate(ast));
 }
 
