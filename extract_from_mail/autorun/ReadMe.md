@@ -22,4 +22,5 @@ News
 Usage:
 ------
 print "python autorun.py input_dir output_dir" in command window
+
 Note:"input_dir" should contain emails in .eml format.
