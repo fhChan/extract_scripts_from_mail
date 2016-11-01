@@ -8,12 +8,12 @@ included.All the analysis can be found in the directoriy 'logs'.
 
 In the directory:
 -------------------------
-[salineup_for_script_malware]:to analyse .js and .wsf files extracted and generate a report.
-[oletools]:An open-sourced tool to analyze [Microsoft OLE2 files].See [http://www.decalage.info/python/oletools](http://www.decalage.info/python/oletools) for more info.
-[autorun.py]:The main function of this tool.
-[extract_from_mail.py]:to extract attachments in their original format.
-[unzip_classify.py]:to unzip the packages extracted.
-[extract_vbs_from_log.py]:to extract vbscripts from logs since oletools put them here.
+- [salineup_for_script_malware]:to analyse .js and .wsf files extracted and generate a report.
+- [oletools]:An open-sourced tool to analyze [Microsoft OLE2 files].See [http://www.decalage.info/python/oletools](http://www.decalage.info/python/oletools) for more info.
+- [autorun.py]:The main function of this tool.
+- [extract_from_mail.py]:to extract attachments in their original format.
+- [unzip_classify.py]:to unzip the packages extracted.
+- [extract_vbs_from_log.py]:to extract vbscripts from logs since oletools put them here.
 
 News
 ----
