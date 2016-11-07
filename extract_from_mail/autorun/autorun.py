@@ -100,7 +100,7 @@ if __name__ == '__main__':
 	with open(sys.argv[2]+'\\logs\\js-log.log', 'w') as fout:
 		subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc --script-malware=true \"'+\
 			sys.argv[2]+'\\js'+'\"', stdout=fout)
-	print "\nNow Processing JS Files :"
+	print "\nNow Processing WSF Files :"
 	with open(sys.argv[2]+'\\logs\\wsf-log.log', 'w') as fout:
 		subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc --script-malware=true \"'+\
 			sys.argv[2]+'\\wsf'+'\"', stdout=fout)
