@@ -15,7 +15,7 @@ else:
 # analysis all .xml in sys.argv[1]
 # judge JS confusion and urls order
 def analysis_xml_csv():
-	file=open('analysis_log1.csv','w')
+	file=open('analysis_log.csv','w')
 	file.write("sample-path,obfuscation,URL,rank,SA_decision\n")
 	no_url_list=[]
 	for f in os.listdir(folder_path):
