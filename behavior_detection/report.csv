@@ -1,3 +1,0 @@
-SHA1,Detected by,Sophos,Kaspersky,ESET-NOD32,Microsoft
-5dffc7f1b244096c375153aa2cdbc110a808bd59,12/55,None,HEUR:Trojan-Downloader.Script.Generic,None,None
-5e008b672ce1bb18f556f7b3a3427067c75f6bcc,10/55,JS/DwnLdr-OMD,HEUR:Trojan-Downloader.Script.Generic,JS/TrojanDownloader.Nemucod.AVX,None

@@ -1,8 +1,8 @@
-# auther = Cheng 
+# auther = Cheng(SA)
+# usage is in README.md
 import os,sys,time
 import re,argparse,ConfigParser,subprocess,threading, psutil,shutil
 import yara
-
 
 global tol_count
 global mal_count
@@ -24,7 +24,7 @@ class Sample():
     def __init__(self,path,embedded,embedded_list=[]):
         self.embedded=embedded
         self.file_path=path
-        prefix_path, file_name = os.path.split(path) #xx.swf
+        prefix_path, file_name = os.path.split(path)
         self.file_name=file_name
         self.malicious=False
         self.as3=False
@@ -34,15 +34,15 @@ class Sample():
 
 class Ffdec_ParseError(Exception):
     def __init__(self,sample):
-    	self.sample=sample
+        self.sample=sample
     def getMessage(self):
-    	print curr_time(),"[ERROR] ffdec can't parse ",self.sample.file_path
+        print curr_time(),"[ERROR] ffdec can't parse ",self.sample.file_path
 
 class Ffdec_Timeout(Exception):
     def __init__(self,sample):
         self.sample=sample
     def getMessage(self):
-    	print curr_time(),'[WARN] ffdec be kill for timeout ',self.sample.file_path
+        print curr_time(),'[WARN] ffdec be kill for timeout ',self.sample.file_path
 
 class Unknown_Ffdec_Error(Exception):
     def __init__(self,sample):
@@ -51,19 +51,23 @@ class Unknown_Ffdec_Error(Exception):
         print curr_time(),'[ERROR] donnot have scripts folder',self.sample.file_path
 
 def curr_time():
-	return time.strftime("%H:%M:%S")
+    return time.strftime("%H:%M:%S")
 
 def check_env(folder_path):
     # check folder_path
     if os.path.exists(folder_path):
-        print curr_time(),'Des path is [%s]'%folder_path
+        print curr_time(),'target path is [%s]'%folder_path
     else:
         print '[ERROR] the entered path not exists!please enter abs path'
         exit(0)
-    # check result folder 
-    # if not os.path.exists('result'):
-    #     os.mkdir('result')
-
+    # check sulo
+    if not os.path.exists('sulo'):
+        print '[ERROR] sulo not exists in current dir!'
+        exit(0)
+    # check ffdec
+    if not os.path.exists('ffdec'):
+        print '[ERROR] ffdec not exists in current dir!'
+        exit(0)    
     # check yara file
     if not os.path.exists('rules.yar'):
         print '[ERROR] yara file not exists!'
@@ -88,10 +92,10 @@ def clean_env():
         os.mkdir('result')
 
 def analyze_dir(folder_path):
-	global tol_count
-	for f in os.listdir(folder_path):
-		print curr_time(),'No.',tol_count+1
-		analyze_file(os.path.join(folder_path,f))
+    global tol_count
+    for f in os.listdir(folder_path):
+        print curr_time(),'No.',tol_count+1
+        analyze_file(os.path.join(folder_path,f))
 
 def analyze_file(file_path):
     if not os.path.exists(file_path):
@@ -116,10 +120,7 @@ def analyze_file(file_path):
     embedded_list=dump_flash(file_path)
 
     if len(embedded_list)!=0:
-        # try:
         analyze_internal(Sample(file_path,True,embedded_list=embedded_list))
-        # except Exception as e:
-        #     e.getMessage()
 
         # clean embedded flash
         for f in os.listdir(os.getcwd()):
@@ -143,7 +144,7 @@ def dump_flash(file_path):
 
     proc = subprocess.Popen(solu_cmd)
     # proc.communicate()
-    t = threading.Timer(30, kill_process, [proc] )
+    t = threading.Timer(20, kill_process, [proc] )
     t.start()
     t.join()
 
@@ -330,7 +331,7 @@ def printSum():
     exception_str=''
     for e in exception_list:
         exception_str+=e+'\n'
-    # 
+
     print '''
 ------------------------------------------------------
 Statistics Info :
@@ -346,8 +347,8 @@ Exception List
 		'''%(tol_count,as3_count,nor_count,mal_count,count_by_rules,exception_str)
 
 def main():
-    opt=argparse.ArgumentParser(description="Flash analyzer")
-    opt.add_argument("TargetPath", help="Enter the Path to .swf folder")
+    opt=argparse.ArgumentParser(description="Flash cve detector - judge swf file is malicious or not")
+    opt.add_argument("TargetPath", help="Enter the Path to .swf/swf folder")
     if len(sys.argv)!=2:
         opt.print_help()
         sys.exit(1)
