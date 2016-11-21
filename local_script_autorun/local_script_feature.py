@@ -1,4 +1,4 @@
-# usage : python parse_behavior.py srcfolder_path
+# usage : python local_script_feature.py srcfolder_path
 import os,sys,re
 
 def parse_behavior(srcfolder_path):
@@ -149,7 +149,7 @@ adodb.stream,getElementsByTagName,getElementById,<div,console,parentNode,window[
 
 def main():
 	if len(sys.argv)!=2:
-		print 'python parse_behavior.py srcfolder_path'
+		print 'python local_script_feature.py srcfolder_path'
 		exit(0)
 
 	parse_behavior(sys.argv[1])

@@ -8,8 +8,8 @@ In the directory:
 -------------------------
 - [salineup_for_script_malware]:to analyse .js and .wsf files extracted and generate a report.
 - [autorun.py]:The main function of this tool.
-- [parse_behavior.py]:to form a CSV file to display the characters.
-- [local_list.py]:to list the sha1 of local scripts in local_list.txt.
+- [local_script_feature.py]:to form a CSV file to display the features.
+- [local_list.py]:to list the sha1 of local scripts into local_list.txt.
 
 News
 ----
