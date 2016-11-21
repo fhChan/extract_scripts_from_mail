@@ -131,6 +131,8 @@ class MailExtactor:
         for root, dirs, files in os.walk(folder_path):
             for name in files:
                 self.extract_from_mail(os.path.join(root,name))
+            for dir_ in dirs:
+                self.process_multiple_mail(root+'\\'+dir_)
 
 def print_usage():
     print """
