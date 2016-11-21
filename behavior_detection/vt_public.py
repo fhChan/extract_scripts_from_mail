@@ -14,16 +14,7 @@ class vtAPI():
     def __init__(self):
         self.api = '835e016eefcb38be48a7dcb2723b2da0f6fa8b59fc22a38c633f986888b44215'  #public api
         self.base = 'https://www.virustotal.com/vtapi/v2/'
-    
-#   File "vt_public.py", line 20, in getReport
-#     jdata =  json.loads(result.read())
-#   File "C:\Python27\lib\json\__init__.py", line 310, in loads
-#     return _default_decoder.decode(s)
-#   File "C:\Python27\lib\json\decoder.py", line 346, in decode
-#     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-#   File "C:\Python27\lib\json\decoder.py", line 364, in raw_decode
-#     raise ValueError("No JSON object could be decoded")
-#   ValueError: No JSON object could be decoded
+
     def getReport(self,md5):
         param = {'resource':md5,'apikey':self.api}
         url = self.base + "file/report"
@@ -67,7 +58,6 @@ def parse(it, md5):
   
 
 def main():
-
   sha1=open(sys.argv[1],'r')
   report=open('report.csv','w')
   report.write('SHA1,Detected by,Sophos,Kaspersky,ESET-NOD32,Microsoft\n')
