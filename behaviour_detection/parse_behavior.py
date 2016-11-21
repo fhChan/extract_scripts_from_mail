@@ -7,8 +7,8 @@ def parse_behavior(srcfolder_path):
 	if not os.path.exists(folder_path):
 		print "srcfolder don't exist"
 		exit(0)
-	report=open('new_report.csv','w')
-	report.write('name,decision,rules,wscript.shell,shell.application,scripting.filesystem,window.xxx,document.xxx,xmlhttp,\
+	report=open('report.csv','w')
+	report.write('name,decision,rules,wscript.shell,shell.application,scripting.filesystemobject,window.xxx,document.xxx,xmlhttp,\
 adodb.stream,getElementsByTagName,getElementById,<div,console,parentNode,window[xxx],document[xxx],$.\n')
 	js_tag='<evidence type="javascript"'
 	set1=set()
