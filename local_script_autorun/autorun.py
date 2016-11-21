@@ -21,7 +21,7 @@ if __name__ == '__main__':
         --script-malware=true --loglevel=all \"'+srcfolder_path, stdout=fout)
 
     # form a CSV file to display the characters
-    os.system('python parse_behavior.py '+'salineup_for_script_malware\\result')
+    os.system('python local_script_feature.py '+'salineup_for_script_malware\\result')
 
     # list the sha1 of local scripts in local_list.txt
     os.system('python local_list.py '+'salineup_for_script_malware\\result')
