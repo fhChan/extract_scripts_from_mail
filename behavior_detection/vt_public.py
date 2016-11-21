@@ -1,14 +1,4 @@
-
-
 import json, urllib, urllib2,hashlib, re, sys, time,os
-
-if len(sys.argv)!=2:
-  print 'python vt_public.py sha1s.txt'
-  exit(0)
-else:
-  if not os.path.exists(sys.argv[1]):
-    print "file don't exists"
-    exit(0)
 
 class vtAPI():
     def __init__(self):
@@ -58,6 +48,16 @@ def parse(it, md5):
   
 
 def main():
+  if len(sys.argv)!=2:
+    print """
+Usage:
+  python vt_public.py sha1s.txt
+    """
+    exit(0)
+  else:
+    if not os.path.exists(sys.argv[1]):
+      print "file don't exists"
+      exit(0)
   sha1=open(sys.argv[1],'r')
   report=open('report.csv','w')
   report.write('SHA1,Detected by,Sophos,Kaspersky,ESET-NOD32,Microsoft\n')
