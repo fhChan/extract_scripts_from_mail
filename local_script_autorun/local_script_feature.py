@@ -44,11 +44,11 @@ adodb.stream,getElementsByTagName,getElementById,<div,console,parentNode,window[
                 i2=rules.find('</rule>',i1)
                 set1.add(rules[i1+6:i2])
                 i1=rules.find('<rule>',i2)
-             for i in set1:
-                 log+=i+';'
-             set1.clear()
-             if log[-1]==';':
-                 log=log[:-1]
+                for i in set1:
+                    log+=i+';'
+                set1.clear()
+            if log[-1]==';':
+                log=log[:-1]
             log+=','
 
             # xml stru error
@@ -74,31 +74,31 @@ adodb.stream,getElementsByTagName,getElementById,<div,console,parentNode,window[
 
             re_win=re.findall('\\bwindow\.[a-z0-9]+',s)
             if re_win:
-                 for item in re_win:
-                     set1.add(item)
-                 for i in set1:
-                     log+=i+';'
-                 set1.clear()
-                 if log[-1]==';':
-                     log=log[:-1]
+                for item in re_win:
+                    set1.add(item)
+                for i in set1:
+                    log+=i+';'
+                set1.clear()
+                if log[-1]==';':
+                    log=log[:-1]
             log+=','
 
             re_doc=re.findall('\\bdocument\.[a-z0-9]+',s)
             if re_doc:
-                 for item in re_doc:
-                     set1.add(item)
-                 for i in set1:
-                     log+=i+';'
-                 set1.clear()
-                 if log[-1]==';':
-                     log=log[:-1]
+                for item in re_doc:
+                    set1.add(item)
+                for i in set1:
+                    log+=i+';'
+                set1.clear()
+                if log[-1]==';':
+                    log=log[:-1]
             log+=','
 
             if s.find('xmlhttp')>-1:
                 log+='T'
             log+=',' 
             if s.find('adodb.stream')>-1:
-                 log+='T'
+                log+='T'
             log+=','  
 
             if s.find('getElementsByTagName')>-1:
@@ -119,24 +119,24 @@ adodb.stream,getElementsByTagName,getElementById,<div,console,parentNode,window[
             
             re_win=re.findall('\\bwindow\[[a-z0-9]+\]',s)
             if re_win:
-                 for item in re_win:
-                     set1.add(item)
-                 for i in set1:
-                     log+=i+';'
-                 set1.clear()
-                 if log[-1]==';':
-                     log=log[:-1]
+                for item in re_win:
+                    set1.add(item)
+                for i in set1:
+                    log+=i+';'
+                set1.clear()
+                if log[-1]==';':
+                    log=log[:-1]
             log+=','
 
             re_doc=re.findall('\\bdocument\[[a-z0-9]+\]',s)
             if re_doc:
-                 for item in re_doc:
-                     set1.add(item)
-                 for i in set1:
-                     log+=i+';'
-                 set1.clear()
-                 if log[-1]==';':
-                     log=log[:-1]
+                for item in re_doc:
+                    set1.add(item)
+                for i in set1:
+                    log+=i+';'
+                set1.clear()
+                if log[-1]==';':
+                    log=log[:-1]
             log+=',' 
             if re.search('\s\$\.',s)!=None:
                 log+='T'
