@@ -24,3 +24,4 @@ Usage:
 print "python autorun.py input_dir output_dir" in command window
 
 Note:"input_dir" should contain emails in .eml format.
+You need to assign an output_dir for saving results and logs.
