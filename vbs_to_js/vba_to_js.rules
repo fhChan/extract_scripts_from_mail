@@ -67,9 +67,11 @@ ON ERROR RESUME Next  -->
 // remove as xxx
 AS +?\w+ --> 
 
+// remove redim
+REDIM -->
+
 // array definition
 DIM\s+(\w*)\((\d*)\) --> var \1 = new Array(\2 + 1)
-(\w+?)\((\w+?)\)\s*?=\s*?(.+?) --> \1[\2]=\3
 
 // variable declaration
 (DIM|CONST)\s+([^\r\n]*) --> var \2
