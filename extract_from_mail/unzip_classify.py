@@ -37,4 +37,4 @@ if __name__ == '__main__':
     if len(sys.argv) != 3:
         print_usage()
         exit(-1)
-    unique_files(sys.argv[1], sys.argv[2])
+    unzip(sys.argv[1], sys.argv[2])
