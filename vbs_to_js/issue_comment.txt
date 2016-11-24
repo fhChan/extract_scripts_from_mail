@@ -1,0 +1,7 @@
+vbs 错误：
+1. ADf9s88 = DP(PiO)  DO...Loop没有条件
+
+转换问题：
+1. 等于号的问题
+2. On Error GoTo LHo
+4. LHo:   ：被转化
