@@ -1,0 +1,133 @@
+import os, sys, re
+
+
+class VBSConverter:
+    """
+    """
+
+    def __init__(self, vbs_file, conversion_rules_path, js_file):
+        self.vbs_file_ = vbs_file
+        self.conversion_rules_path_ = conversion_rules_path
+        self.conversion_rules_ = []
+        self.array_name_list_ = []
+        self.function_name_list_ = []
+        self.js_file_ = js_file
+        self.re_module_name_ = re.compile(r'VBA MACRO (\w*?)\.', re.IGNORECASE | re.MULTILINE)
+
+    def load_conversion_rules(self):
+        with open(self.conversion_rules_path_) as fh:
+            for line in fh.readlines():
+                if line.startswith('//') or len(line.strip()) == 0:
+                    continue
+                else:
+                    matched, replaced = line.split('-->')
+                    self.conversion_rules_.append((matched.strip(), replaced.strip()))
+
+    def remove_module_class_name(self):
+        name_list = re.findall(self.re_module_name_, self.content_)
+        # print name_list
+        for item in name_list:
+            self.content_ = re.sub(item + '\\.', '', self.content_, 0, re.IGNORECASE | re.MULTILINE)
+
+    def process_variables(self, lines):
+        output_lines = []
+        for line in lines:
+            line = line.strip()
+            if 'dim ' in line and ',' in line:
+                vars = line.split(',')
+                output_lines.append(vars[0])
+                for var in vars[1:]:
+                    output_lines.append('dim ' + var)
+            else:
+                output_lines.append(line)
+        return output_lines
+
+    def process_statement_separator(self, lines):
+        output_lines = []
+        for line in lines:
+            if ':' in line:
+                statements = line.split(':')
+                for statement in statements:
+                    output_lines.append(statement)
+            else:
+                output_lines.append(line)
+        return output_lines
+
+    def find_key(self, line, key_list):
+        matched_key_list = []
+        for array_name in key_list:
+            if array_name in line:
+                matched_key_list.append(array_name)
+        return matched_key_list
+
+    def process_array_op(self, lines):
+        output_lines = []
+        for line in lines:
+            if 'dim ' in line:
+                matched = re.search(r'(\w+)\(.*\)', line, re.IGNORECASE)
+                if matched != None:
+                    array_name = matched.group(1)
+                    self.array_name_list_.append(array_name)
+                    output_lines.append(line)
+                    continue
+            matched_array_name_list = self.find_key(line, self.array_name_list_)
+            if len(matched_array_name_list) > 0:
+                for array_name in matched_array_name_list:
+                    line = re.sub(array_name + r'\((.*?)\)', array_name + r'[\1]', line)
+            output_lines.append(line)
+        return output_lines
+
+    def find_all_function_name(self):
+        re_function_name = re.compile(r'(?:Function|Sub)[ \t]+(\w+)', re.IGNORECASE | re.MULTILINE)
+        self.function_name_list_ = re.findall(re_function_name, self.content_)
+
+    def process_function_calling_return(self, lines):
+        output_lines = []
+        for line in lines:
+            matched_func_name_list = self.find_key(line, self.function_name_list_)
+            if len(matched_func_name_list) > 0:
+                for matched_func_name in matched_func_name_list:
+                    line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?=(.*)', r'\1ret_val = \2', line)
+                    line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?(\w+.*)', r'\1'+matched_func_name + r'(\2)', line)
+            output_lines.append(line)
+        return output_lines
+
+    def process_by_lines(self):
+        lines = self.content_.split('\n')
+        lines = self.process_variables(lines)
+        lines = self.process_array_op(lines)
+        lines = self.process_statement_separator(lines)
+        self.content_ = '\n'.join(lines)
+        self.find_all_function_name()
+        lines = self.process_function_calling_return(lines)
+        self.content_ = '\n'.join(lines)
+
+    def apply_conversion_rules(self):
+        for matched, replaced in self.conversion_rules_:
+            self.content_ = re.sub(matched, replaced, self.content_, 0, re.IGNORECASE | re.MULTILINE)
+
+    def dump_to_js_file(self):
+        fh = open(self.js_file_, 'w')
+        fh.write(self.content_)
+        fh.close()
+
+    def convert(self):
+        self.content_ = open(self.vbs_file_, 'r').read().lower()
+        self.load_conversion_rules()
+        self.remove_module_class_name()
+        self.process_by_lines()
+        self.apply_conversion_rules()
+        self.dump_to_js_file()
+
+def print_help():
+    print """
+Usage:
+    python vbs2js.py input_vbs_file input_conversion_rules_file output_js_file
+    """
+
+if __name__ == '__main__':
+    if len(sys.argv) != 4:
+        print_help()
+        exit(-1)
+    converter = VBSConverter(sys.argv[1], sys.argv[2], sys.argv[3])
+    converter.convert()

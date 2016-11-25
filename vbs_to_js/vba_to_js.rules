@@ -1,0 +1,169 @@
+// C++ interface to the pcre regular-expression library.  RE supports
+// Perl-style regular expressions (with extensions like \d, \w, \s,
+// ...).
+//
+// -----------------------------------------------------------------------
+// REGEXP SYNTAX:
+//
+// This module is part of the pcre library and hence supports its syntax
+// for regular expressions.
+//
+// The syntax is pretty similar to Perl's.  For those not familiar
+// with Perl's regular expressions, here are some examples of the most
+// commonly used extensions:
+//
+//   "hello (\\w+) world"  -- \w matches a "word" character
+//   "version (\\d+)"      -- \d matches a digit
+//   "hello\\s+world"      -- \s matches any whitespace character
+//   "\\b(\\w+)\\b"        -- \b matches empty string at a word boundary
+//   "(?i)hello"           -- (?i) turns on case-insensitive matching
+//   "/\\*(.*?)\\*/"       -- .*? matches . minimum no. of times possible
+//
+// -----------------------------------------------------------------------
+// PASSING MODIFIERS TO THE REGULAR EXPRESSION ENGINE
+//
+// PCRE defines some modifiers to change the behavior of the regular
+// expression engine.
+// The C++ wrapper defines an auxiliary class, RE_Options, as a vehicle
+// to pass such modifiers to a RE class.
+//
+// Currently, the following modifiers are supported
+//
+//    modifier              description               Perl corresponding
+//
+//    PCRE_CASELESS         case insensitive match    /i
+//    PCRE_MULTILINE        multiple lines match      /m
+//    PCRE_DOTALL           dot matches newlines      /s
+//    PCRE_DOLLAR_ENDONLY   $ matches only at end     N/A
+//    PCRE_EXTRA            strict escape parsing     N/A
+//    PCRE_EXTENDED         ignore whitespaces        /x
+//    PCRE_UTF8             handles UTF8 chars        built-in
+//    PCRE_UNGREEDY         reverses * and *?         N/A
+//    PCRE_NO_AUTO_CAPTURE  disables matching parens  N/A (*)
+//
+// (For a full account on how each modifier works, please check the
+// PCRE API reference manual).
+//
+// (*) Both Perl and PCRE allow non matching parentheses by means of the
+// "?:" modifier within the pattern itself. e.g. (?:ab|cd) does not
+// capture, while (ab|cd) does.
+//
+// -----------------------------------------------------------------------
+// REPLACING PARTS OF STRINGS
+//
+// You can replace the first match of "pattern" in "str" with
+// "rewrite".  Within "rewrite", backslash-escaped digits (\1 to \9)
+// can be used to insert text matching corresponding parenthesized
+// group from the pattern.  \0 in "rewrite" refers to the entire
+// matching text. 
+// -----------------------------------------------------------------------
+
+// On Error Resume Next
+ON ERROR RESUME Next  -->
+
+// Set
+\bSET\b --> 
+
+// remove as xxx
+AS +?\w+ --> 
+
+// remove redim
+REDIM -->
+
+// array definition
+DIM\s+(\w*)\((\d*)\) --> var \1 = new Array(\2 + 1)
+
+// variable declaration
+(DIM|CONST)\s+([^\r\n]*) --> var \2
+
+// for loop
+For\s*((\w*)\s*=\s*\w*)\s*To\s*([^\r\n]*)\r? --> for (\1; \2 < \3; \2++) {\n
+
+// for each
+\bFOR EACH ([^\r\n]+) --> for each (\1) {\n
+
+// next
+\bNEXT\b --> }
+
+// Exit For
+\bEXIT FOR\b --> break\n}
+
+ 
+// Exit Do
+//\bEXIT DO\b --> break\n}
+
+// if ... then
+\bIF( +?)(.*?)THEN --> if (\2) {\n
+
+// case else
+\bCASE ELSE\b --> default
+
+// else
+\bELSE\b --> } else {\n
+
+// elseif ... then
+\bELSEIF( +?)(.*?)THEN --> } else if (\2) {\n
+
+// end if 
+\bEND IF\b --> }
+
+// select case
+\bSELECT CASE +?(\w+) --> switch (\1) {\n
+
+// end select
+\bEND SELECT\b --> }
+
+// case
+CASE([^:]+):(.+) --> case \1: {\2;break;}
+
+// function keywords
+FUNCTION\s+(\w+)(\(.*?\)) --> function \1\2 {\nvar ret_val\n
+END FUNCTION --> return ret_val\n}
+SUB\s+(\w+)(\(.*?\)) --> function \1\2 {\n
+END SUB --> }
+
+// string concat
+& --> +
+
+//UBOUNTD function, eg. UBound(Zx6)
+\bUBOUND\((\w*?)\) --> (\1.length - 1)
+
+//ChrW function, eg. ChrW
+\bCHRW\b --> String.fromCharCode
+
+//AscW function, eg. AscW(Mid(Mt3, Dm + 1, 1))
+ASCW(\(.*\)) --> \1.charCodeAt(0)
+
+//Mid function, eg. Mid(Mt3, Dm + 1, 1)
+MID\(([^,]*),([^,]*),([^,]*)\) -->\1.substr((\2 - 1), \3)
+
+//Len function, eg.Len(Mt3)
+\bLEN\((\w*?)\) --> \1.length
+
+//CreateObject
+CREATEOBJECT --> new ActiveXObject
+
+//Space function
+\bSPACE\b --> ' '.repeat
+
+//Split function, eg. Split(HPp, " ")
+\bSPLIT\(([^,]*),([^,]*)\) --> \1.split(\2)
+
+//CDbl function, eg. CDbl(AFf)
+\bCDBL\b -->parseFloat
+
+//Int functon, eg. Int(CDbl(AFf)
+\bINT\b --> Math.floor
+
+//CInt function
+\bCINT\b --> Math.round
+
+//operators
+\bAND\b --> &&
+\bOR\b --> ||
+\bNOT\b --> !
+\bXOR\b --> ^
+\bMOD\b --> %
+<> --> !=
+
+
