@@ -21,7 +21,7 @@ def unzip(input_folder, output_folder):
             cur_file_path = os.path.join(root, name)
             cur_root, ext = os.path.splitext(cur_file_path)
             if '.zip' == ext:
-                zip_file = zipfile.ZipFile(cur_file_path, 'rb')
+                zip_file = zipfile.ZipFile(cur_file_path, 'r')
                 zip_file.extractall(output_folder)
 
 
