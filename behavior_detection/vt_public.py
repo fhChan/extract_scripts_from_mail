@@ -73,23 +73,24 @@ Scan sha1 on VT,generate csv report
         if not os.path.exists(sys.argv[1]):
             print "file don't exists"
             exit(0)
-    sha1 = open(sys.argv[1], 'r')
     report = open('report.csv', 'w')
     report.write('SHA1,Detected by,Sophos,Kaspersky,ESET-NOD32,Microsoft\n')
     vt = vtAPI()
-    for line in sha1:
-        log = line[:-1] + ','   # remove '\n'
-        md5 = checkMD5(line[:-1])
-        print 'start anaylsis %s' % line[:-1]
-        try:
+    with open(sys.argv[1], "r") as sha1:
+        for line in sha1:
+            if line[-1] == '\n':
+                log = line[:-1] + ','   # remove '\n'
+            md5 = checkMD5(line[:-1])
+            print 'start anaylsis %s' % line[:-1]
+            try:
+                log += parse(vt.getReport(md5), md5)
+            except ValueError:
+                print 'more than 4r/min,20s later try to reparse'
+            time.sleep(20)
             log += parse(vt.getReport(md5), md5)
-        except ValueError:
-            print 'more than 4r/min,20s later try to reparse'
-        time.sleep(20)
-        log += parse(vt.getReport(md5), md5)
-        report.write(log + '\n')
-        report.flush()
-        time.sleep(14)
+            report.write(log + '\n')
+            report.flush()
+            time.sleep(14)
     report.close()
 
 

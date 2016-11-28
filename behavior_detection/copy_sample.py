@@ -5,19 +5,18 @@ import shutil
 
 
 def copy_sample(name_list, src_folder, des_folder):
-    f = open(name_list, 'r')
     count = 0
-    for line in f.readlines():
-        count += 1
-        print count
-        if line[-1] == '\n':
-            name = line[:-1]
-        if os.path.exists(os.path.join(src_folder, name)):
-            f_path = os.path.join(src_folder, name)
-            shutil.copyfile(f_path, os.path.join(des_folder, name))
-        else:
-            print '[ERROR] %s donnot exists in %s ' % (name, src_folder)
-    f.close()
+    with open(name_list, "r") as f:
+        for line in f:
+            count += 1
+            print count
+            if line[-1] == '\n':
+                name = line[:-1]
+            if os.path.exists(os.path.join(src_folder, name)):
+                f_path = os.path.join(src_folder, name)
+                shutil.copyfile(f_path, os.path.join(des_folder, name))
+            else:
+                print '[ERROR] %s donnot exists in %s ' % (name, src_folder)
 
 
 def main():
