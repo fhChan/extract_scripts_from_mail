@@ -60,6 +60,26 @@ class VBSConverter:
                 matched_key_list.append(array_name)
         return matched_key_list
 
+    def get_bracket_dict(self, line):
+        bracket_ops_stack = []
+        bracket_dict = {}
+
+        length_of_line = len(line)
+        for i in xrange(length_of_line):
+            each_char = line[i]
+            if each_char == '(':
+                bracket_ops_stack.append(i)
+            elif each_char == ')':
+                id = bracket_ops_stack.pop()
+                bracket_dict[id] = i
+        
+        if len(bracket_ops_stack) != 0:
+            print line
+            print "left_bracket_count is not equal to right_bracket_count"
+            return False
+        else:
+            return bracket_dict
+
     def process_array_op(self, lines):
         output_lines = []
         for line in lines:
@@ -72,9 +92,18 @@ class VBSConverter:
                     continue
             matched_array_name_list = self.find_key(line, self.array_name_list_)
             if len(matched_array_name_list) > 0:
+                bracket_dict = self.get_bracket_dict(line)
+                str_list = list(line)
                 for array_name in matched_array_name_list:
-                    line = re.sub(array_name + r'\((.*?)\)', array_name + r'[\1]', line)
-            output_lines.append(line)
+                    pattern = array_name + r'\s*\('
+                    for m in re.finditer(pattern, line):
+                        match_str = m.group()
+                        left_bracket_index = m.start() + len(match_str) - 1
+                        str_list[left_bracket_index] = '['
+                        str_list[bracket_dict[left_bracket_index]] = ']'
+                output_lines.append(''.join(str_list))
+            else:
+                output_lines.append(line)
         return output_lines
 
     def find_all_function_name(self):

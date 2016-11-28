@@ -60,6 +60,7 @@
 
 // On Error Resume Next
 ON ERROR RESUME Next  -->
+On Error GoTo .* -->
 
 // Set
 \bSET\b --> 
@@ -70,27 +71,61 @@ AS +?\w+ -->
 // remove redim
 REDIM -->
 
+// remove Private, public
+PRIVATE -->
+PUBLIC -->
+
+//remove byval
+BYVAL -->
+
+
 // array definition
-DIM\s+(\w*)\((\d*)\) --> var \1 = new Array(\2 + 1)
+DIM\s+(\w*)(\(.+\)) --> var \1 = new Array(\2 + 1)
+DIM\s+(\w*)\(\) --> var \1 = new Array()
 
 // variable declaration
 (DIM|CONST)\s+([^\r\n]*) --> var \2
 
 // for loop
-For\s*((\w*)\s*=\s*\w*)\s*To\s*([^\r\n]*)\r? --> for (\1; \2 < \3; \2++) {\n
+For\s*((\w*)\s*=\s*.*)\s*To\s*([^\r\n]*)\r? --> for (\1; \2 < \3; \2++) {\n
 
 // for each
 \bFOR EACH ([^\r\n]+) --> for each (\1) {\n
 
 // next
-\bNEXT\b --> }
+\bNEXT.*\b --> }
 
 // Exit For
 \bEXIT FOR\b --> break\n}
 
- 
+//Exit Function
+\bEXIT FUNCTION\b --> break\n}
+
+//While...Wend
+^\s*WHILE\s*([^\n]*) --> while (\1){\n
+WEND --> }
+
+//Do While ...Loop
+DO WHILE\s*([^\n]*) --> while (\1){\n
+LOOP\s*\n -->}\n
+
+//Do Until...Loop, eg. Do Until CQO8sw >= 53
+DO UNTIL\s*([^\n]*) --> while (!(\1)){\n
+
+//Do...Loop While
+DO\s*\n --> do{\n
+LOOP WHILE\s*([^\n]*) --> }while (\1)
+
+//DO...Loop Until
+LOOP Until\s*([^\n]*) --> }while (!(\1))
+
+
+
 // Exit Do
 //\bEXIT DO\b --> break\n}
+
+// equal op in if
+\bIF\b +?([^=\n]+)=([^=\n]+) --> if \1==\2
 
 // if ... then
 \bIF( +?)(.*?)THEN --> if (\2) {\n
@@ -116,8 +151,11 @@ For\s*((\w*)\s*=\s*\w*)\s*To\s*([^\r\n]*)\r? --> for (\1; \2 < \3; \2++) {\n
 // case
 CASE([^:]+):(.+) --> case \1: {\2;break;}
 
+//Array in Function param list  eg. Function Y2L78kpw(G5hNUkH9() As Byte)
+(FUNCTION.+)\((\w+)\(\).*\) --> \1(\2)
+
 // function keywords
-FUNCTION\s+(\w+)(\(.*?\)) --> function \1\2 {\nvar ret_val\n
+FUNCTION\s+(\w+)(\(.*\)) --> function \1\2 {\nvar ret_val\n
 END FUNCTION --> return ret_val\n}
 SUB\s+(\w+)(\(.*?\)) --> function \1\2 {\n
 END SUB --> }
@@ -165,5 +203,6 @@ CREATEOBJECT --> new ActiveXObject
 \bXOR\b --> ^
 \bMOD\b --> %
 <> --> !=
+(\w+)\s*\\\s*(\w+)--> Math.floor(\1/\2)
 
 
