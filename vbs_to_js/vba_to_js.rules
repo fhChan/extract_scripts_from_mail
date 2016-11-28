@@ -78,6 +78,8 @@ PUBLIC -->
 //remove byval
 BYVAL -->
 
+//Comment Symbol
+^' --> //
 
 // array definition
 DIM\s+(\w*)(\(.+\)) --> var \1 = new Array(\2 + 1)
@@ -99,7 +101,10 @@ For\s*((\w*)\s*=\s*.*)\s*To\s*([^\r\n]*)\r? --> for (\1; \2 < \3; \2++) {\n
 \bEXIT FOR\b --> break\n}
 
 //Exit Function
-\bEXIT FUNCTION\b --> break\n}
+\bEXIT FUNCTION\b --> return ret_val\n
+
+//Exit Sub
+\bEXIT SUB\b --> return\n
 
 //While...Wend
 ^\s*WHILE\s*([^\n]*) --> while (\1){\n
