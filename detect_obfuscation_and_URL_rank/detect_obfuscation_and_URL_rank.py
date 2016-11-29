@@ -85,7 +85,7 @@ The database doesn't exist!Please check whether there is a file named 'top-1m.cs
         return -1
     for line in open(db_path,'r'):
         no,url=line.split(",")
-        if _url.find(url[:-1])!=-1:
+        if _url==url.strip() or _url.find(r'.'+url.strip())!=-1:
             break
     return int(no)
 
