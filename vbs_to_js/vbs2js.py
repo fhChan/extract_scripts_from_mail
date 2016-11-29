@@ -41,14 +41,16 @@ class VBSConverter:
             else:
                 output_lines.append(line)
         return output_lines
-
     def process_statement_separator(self, lines):
         output_lines = []
         for line in lines:
             if ':' in line:
-                statements = line.split(':')
-                for statement in statements:
-                    output_lines.append(statement)
+                if ("'" in line) or (re.match(r'^\s*\w+:', line)) or (re.match(r'"[^"]*:[^"]*"', line)):
+                    output_lines.append(line)
+                else:
+                    statements = line.split(':')
+                    for statement in statements:
+                        output_lines.append(statement)
             else:
                 output_lines.append(line)
         return output_lines
