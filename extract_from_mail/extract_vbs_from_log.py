@@ -12,7 +12,7 @@ def extract_vbs_from_log(log_name):
                 cur_file_name = line.split('VBA MACRO')[-1].strip()
             if line.startswith('- - - - - - -'):
                 vbs_count += 1
-                portion = os.path.splitext(sys.argv[1])
+                portion = os.path.splitext(log_name)
                 new_dir=portion[0]
                 if not os.path.exists(new_dir):
     	            os.makedirs(new_dir)
@@ -41,4 +41,5 @@ def main():
 
     extract_vbs_from_log(sys.argv[1])
 
-main()
+if __name__ == '__main__':
+    main()

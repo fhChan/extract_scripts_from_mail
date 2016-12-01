@@ -38,16 +38,13 @@ def local_list(srcfolder_path):
             index=s.find(js_tag,i2)
             s=s[index+20:].lower()
 
-            if s.find(r'/*@cc_on')>-1:
-                l_list.write(js_name+'\n')
-                l_list.flush()
-                continue
-
-            if s.find('wscript.shell')>-1:
+            if r'/*@cc_on' in s:
                 la=1
-            elif s.find('shell.application')>-1:
+            elif 'wscript.shell' in s:
                 la=1
-            elif s.find('scripting.filesystemobject')>-1:
+            elif 'shell.application' in s:
+                la=1
+            elif 'scripting.filesystemobject' in s:
                 la=1
             else:
                 la=0
