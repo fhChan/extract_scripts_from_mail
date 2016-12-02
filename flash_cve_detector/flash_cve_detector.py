@@ -31,7 +31,6 @@ class FlashDetector:
         self.target_path = ''
         self.unpack_ = FlashUnpackHelper()
         self.decomplie_ = FfdecHelper()
-        os.chdir(self.root_path)
         self.load_conf()
 
     def work(self):
@@ -120,7 +119,7 @@ class FlashDetector:
         self.unpack_.set_file_path(file_path)
         embedded_list = self.unpack_.dump_flash()
 
-        if len(embedded_list) != 0:
+        if len(embedded_list):
             embedded_list.insert(0, file_path)
             self.analyze_internal(Sample(file_path, True, embedded_list=embedded_list))
             # clean embedded flash
@@ -131,41 +130,6 @@ class FlashDetector:
             self.analyze_internal((Sample(file_path, False)))
         print '\n'
 
-    '''
-    def dump_flash(self, file_path):
-        self.dumpTimeout = False
-        # f0fad08da4212cc398160c38d2ba1f8a1930cfd1  10->dump,11->no dump
-        # solu_cmd = 'sulo\pin -t sulo.dll -- flashplayer10_3r181_23_win_sa.exe '+file_path
-        solu_cmd = 'sulo\pin -t sulo.dll -- flashplayer11_1r102_62_win_sa_32bit.exe ' + file_path
-        proc = subprocess.Popen(solu_cmd)
-        # proc.communicate()
-        t = threading.Timer(30, self.kill_process, [proc])
-        t.start()
-        t.join()
-        if self.dumpTimeout is True:
-            DumpFlag = False
-            for f in os.listdir(self.root_path):
-                if f.startswith('dumped_flash'):
-                    DumpFlag = True
-                    break
-            if DumpFlag is False:
-                print curr_time(), 'dump timeout,give up dumping'
-                return []
-        embedded_list = []
-        prefix_path, file_name = os.path.split(file_path)
-        embedded_count = 0
-        for f in os.listdir(self.root_path):
-            if f.startswith('dumped_flash'):
-                new_name = file_name[:-4] + '_%s' % embedded_count  # xxx_0
-                os.rename(f, new_name)
-                embedded_list.append(os.path.join(self.root_path, new_name))
-                embedded_count += 1
-        if embedded_count == 0:
-            print curr_time(), 'no need to dump'
-        else:
-            print curr_time(), 'dump dembedded flash', embedded_list
-        return embedded_list
-    '''
     def analyze_internal(self, sample):
         # export as files
         print curr_time(), 'Now decomplie File : [%s]' % sample.file_path
@@ -259,15 +223,7 @@ class FlashDetector:
                 self.matched_rules[r] += 1
             else:
                 self.matched_rules[r] = 1
-    '''
-    def kill_process(self, proc):
-        if proc.poll() is None:
-            print curr_time(), '[WARN] process taking too long to complete - kill'
-            for child in psutil.Process(proc.pid).children(recursive=True):
-                child.kill()
-            proc.kill()
-            self.dumpTimeout = True
-    '''
+
     def collect_info(self, sample):
         self.tol_count += 1
         if sample.as3 is True:
@@ -281,11 +237,7 @@ class FlashDetector:
         count_by_rules = ''
         for k, v in self.matched_rules.iteritems():
             count_by_rules += '[%s]=[%s]\n' % (k, v)
-
-        exception_str = ''
-        for e in self.exception_list:
-            exception_str += e + '\n'
-
+        exception_str = '\n'.join(self.exception_list)
         print '''
 ------------------------------------------------------
 Statistics Info :
@@ -306,11 +258,12 @@ class Sample():
         self.embedded = embedded
         self.file_path = path
         prefix_path, file_name = os.path.split(path)
+        file_name_without_ext, ext = os.path.splitext(file_name)
         self.file_name = file_name
         self.malicious = False
         self.as3 = False
         self.exception = False
-        self.result_folder = os.path.join('result', file_name)[:-4]
+        self.result_folder = os.path.join('result', file_name_without_ext)
         self.embedded_list = embedded_list
 
 
@@ -322,6 +275,7 @@ def main():
         sys.exit(1)
     options = opt.parse_args()
 
+    os.chdir(sys.path[0])
     detector = FlashDetector()
     detector.set_target_path(options.TargetPath)
     detector.work()

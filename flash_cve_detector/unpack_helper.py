@@ -43,7 +43,6 @@ class FlashUnpackHelper:
         # solu_cmd = 'sulo\pin -t sulo.dll -- flashplayer10_3r181_23_win_sa.exe '+file_path
         solu_cmd = 'sulo\pin -t sulo.dll -- flashplayer11_1r102_62_win_sa_32bit.exe ' + self.file_path
         proc = subprocess.Popen(solu_cmd)
-        # proc.communicate()
         t = threading.Timer(30, self.kill_process, [proc])
         t.start()
         t.join()
@@ -57,11 +56,12 @@ class FlashUnpackHelper:
                 print curr_time(), 'dump timeout,give up dumping'
                 return []
         embedded_list = []
-        prefix_path, file_name = os.path.split(self.file_path)
+        file_path_without_ext, ext = os.path.splitext(file_path)
+        prefix_path, file_name = os.path.split(file_path_without_ext)
         embedded_count = 0
         for f in os.listdir(self.root_path):
             if f.startswith('dumped_flash'):
-                new_name = file_name[:-4] + '_%s' % embedded_count  # xxx_0
+                new_name = file_name + '_%s' % embedded_count  # xxx_0
                 os.rename(f, new_name)
                 embedded_list.append(os.path.join(self.root_path, new_name))
                 embedded_count += 1
