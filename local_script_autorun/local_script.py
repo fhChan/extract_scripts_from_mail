@@ -273,25 +273,41 @@ str(self.parentNode(xml_file)),self.win_2(xml_file),self.doc_2(xml_file),str(sel
 def print_usage():
     print """
 Usage:
-    python local_script.py srcfolder_path
+    python local_script.py sample/sample_folder
     """
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print_usage()
         exit(-1)
 
-    srcfolder_path=sys.argv[1]
+    target_path = sys.argv[1]
+
     with open('SAL.log', 'w') as fout:
         subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc \
-        --script-malware=true --loglevel=all \"'+srcfolder_path, stdout=fout)
+        --script-malware=true --loglevel=all \"' + target_path, stdout=fout)
 
-    result_dir=os.path.join('salineup_for_script_malware','result')
-    XA=xml_analyser()
-    for f in os.listdir(result_dir):
-        filepath=os.path.join(result_dir,f)
-        try:
-            if 'xml' in os.path.splitext(f)[1]:
-                XA.report_append(filepath)
-        except 'xml stru error':
-            print 'xml stru error: '+f
+    result_dir = os.path.join('salineup_for_script_malware', 'result')
+    XA = xml_analyser()
+
+    if os.path.isfile(target_path):
+        last_modified_date = 0
+        last_behavior = ''
+        for behavior in os.listdir(result_dir):
+            behavior_path = os.path.join(result_dir, behavior)
+            mtime = os.path.getmtime(behavior_path)
+            if (mtime > last_modified_date):
+                last_modified_date, last_behavior = mtime, behavior_path
+        if XA.is_local_script(last_behavior):
+            print 'Is LocalScript!'
+        else:
+            print 'Is Not LocalScript!'
+    else:
+        for f in os.listdir(result_dir):
+            filepath = os.path.join(result_dir, f)
+            try:
+                if 'xml' in os.path.splitext(f)[1]:
+                    XA.report_append(filepath)
+            except 'xml stru error':
+                print 'xml stru error: ' + f
