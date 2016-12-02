@@ -299,10 +299,13 @@ if __name__ == '__main__':
             mtime = os.path.getmtime(behavior_path)
             if (mtime > last_modified_date):
                 last_modified_date, last_behavior = mtime, behavior_path
-        if XA.is_local_script(last_behavior):
-            print 'Is LocalScript!'
-        else:
-            print 'Is Not LocalScript!'
+        try:
+            if XA.is_local_script(last_behavior):
+                print 'Is LocalScript!'
+            else:
+                print 'Is Not LocalScript!'
+        except 'xml stru error':
+            print 'xml stru error: ' + last_behavior
     else:
         for f in os.listdir(result_dir):
             filepath = os.path.join(result_dir, f)
