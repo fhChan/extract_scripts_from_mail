@@ -56,7 +56,7 @@ class FlashUnpackHelper:
                 print curr_time(), 'dump timeout,give up dumping'
                 return []
         embedded_list = []
-        file_path_without_ext, ext = os.path.splitext(file_path)
+        file_path_without_ext, ext = os.path.splitext(self.file_path)
         prefix_path, file_name = os.path.split(file_path_without_ext)
         embedded_count = 0
         for f in os.listdir(self.root_path):
