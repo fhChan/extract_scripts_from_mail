@@ -50,18 +50,12 @@ class xml_analyser(object):
         i2=s.find('</matched_rules>')
         rules=s[i1:i2]
         set1=set()
-        r=''
         i1=rules.find('<rule>')
         while i1 != -1:
             i2=rules.find('</rule>',i1)
             set1.add(rules[i1+6:i2])
             i1=rules.find('<rule>',i2)
-            for i in set1:
-                r+=i+';'
-            set1.clear()
-        if ';' in r:
-            r=r[:-1]
-        return r
+        return ';'.join(set1)
 
     def xml_stru_error(self,xml_file):
         s=self.f_reader(xml_file)
@@ -78,177 +72,59 @@ class xml_analyser(object):
         s=s[index+20:].lower()
         return s
 
-    def cc_on(self,xml_file):
+    def find_feature(self,feature,xml_file):
         s=self.behaviour_reader(xml_file)
-        if r'/*@cc_on' in s:
-            return 1
-        else:
-            return 0
-
-    def w_s(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if 'wscript.shell' in s:
-            return 1
-        else:
-            return 0
-
-    def s_a(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if 'shell.application' in s:
-            return 1
-        else:
-            return 0
-
-    def s_f(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if 'scripting.filesystemobject' in s:
+        if re.search(feature,s)!=None:
             return 1
         else:
             return 0
 
     def win_1(self,xml_file):
         s=self.behaviour_reader(xml_file)
-        set2=set()
-        t=''
         re_win=re.findall('\\bwindow\.[a-z0-9]+',s)
-        if re_win:
-            for item in re_win:
-                set2.add(item)
-            for i in set2:
-                t+=i+';'
-            set2.clear()
-            if ';' in t:
-                t=t[:-1]
-        return t
+        return ';'.join(set(re_win))
 
     def doc_1(self,xml_file):
         s=self.behaviour_reader(xml_file)
-        set3=set()
-        t=''
         re_doc=re.findall('\\bdocument\.[a-z0-9]+',s)
-        if re_doc:
-            for item in re_doc:
-                set3.add(item)
-            for i in set3:
-                t+=i+';'
-            set3.clear()
-            if ';' in t:
-                t=t[:-1]
-        return t
-
-    def xmlhttp(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if 'xmlhttp' in s:
-            return 1
-        else:
-            return 0
-
-    def adodb_stream(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if 'adodb.stream' in s:
-            return 1
-        else:
-            return 0
-
-    def gEBT(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if 'getElementsByTagName' in s:
-            return 1
-        else:
-            return 0
-
-    def gEBI(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if 'getElementById' in s:
-            return 1
-        else:
-            return 0
-
-    def div(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if '<div' in s:
-            return 1
-        else:
-            return 0
-
-    def console(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if '\\bconsole\.' in s:
-            return 1
-        else:
-            return 0
-
-    def parentNode(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if 'parentNode' in s:
-            return 1
-        else:
-            return 0
+        return ';'.join(set(re_doc))
         
     def win_2(self,xml_file):
         s=self.behaviour_reader(xml_file)
-        set4=set()
-        t=''
         re_win=re.findall('\\bwindow\[[a-z0-9]+\]',s)
-        if re_win:
-            for item in re_win:
-                set4.add(item)
-            for i in set4:
-                t+=i+';'
-            set4.clear()
-            if ';' in t:
-                t=t[:-1]
-        return t
+        return ';'.join(set(re_win))
 
     def doc_2(self,xml_file):
         s=self.behaviour_reader(xml_file)
-        set5=set()
-        t=''
         re_doc=re.findall('\\bdocument\[[a-z0-9]+\]',s)
-        if re_doc:
-            for item in re_doc:
-                set5.add(item)
-            for i in set5:
-                t+=i+';'
-            set5.clear()
-            if ';' in t:
-                t=t[:-1]
-        return t
-
-    def dollar(self,xml_file):
-        s=self.behaviour_reader(xml_file)
-        if re.search('\s\$\.',s)!=None:
-            return 1
-        else:
-            return 0
-
+        return ';'.join(set(re_doc))
 
     def is_local_script(self,xml_file):
         flag=0
-        flag+=self.cc_on(xml_file)
-        flag+=self.w_s(xml_file)
-        flag+=self.s_a(xml_file)
-        flag+=self.s_f(xml_file)
+        flag+=self.find_feature(r'/*@cc_on',xml_file)
+        flag+=self.find_feature('wscript.shell',xml_file)
+        flag+=self.find_feature('shell.application',xml_file)
+        flag+=self.find_feature('scripting.filesystemobject',xml_file)
         if flag>0:
             if self.win_1(xml_file)!='' and self.win_1(xml_file)!='window.eval':
                 return False
             elif 'doc' in self.doc_1(xml_file):
                 return False
-            elif self.gEBT(xml_file):
+            elif self.find_feature('getElementsByTagName',xml_file):
                 return False
-            elif self.gEBI(xml_file):
+            elif self.find_feature('getElementById',xml_file):
                 return False
-            elif self.div(xml_file):
+            elif self.find_feature('<div',xml_file):
                 return False
-            elif self.console(xml_file):
+            elif self.find_feature('\\bconsole\.',xml_file):
                 return False
-            elif self.parentNode(xml_file):
+            elif self.find_feature('parentNode',xml_file):
                 return False
             elif 'win' in self.win_2(xml_file) and self.win_2(xml_file)!='window[eval]':
                 return False
             elif 'doc' in self.doc_2(xml_file):
                 return False
-            elif self.dollar(xml_file):
+            elif self.find_feature('\s\$\.',xml_file):
                 return False
             else:
                 return True
@@ -262,11 +138,27 @@ class xml_analyser(object):
             isl='F'
         csvfile=file('report.csv','ab')
         writer=csv.writer(csvfile)
-        writer.writerow([self.xml_filename(xml_file),isl,self.sa_decision(xml_file),self.sa_rules(xml_file),\
-str(self.cc_on(xml_file)),str(self.w_s(xml_file)),str(self.s_a(xml_file)),str(self.s_f(xml_file)),\
-self.win_1(xml_file),self.doc_1(xml_file),str(self.xmlhttp(xml_file)),str(self.adodb_stream(xml_file)),\
-str(self.gEBT(xml_file)),str(self.gEBI(xml_file)),str(self.div(xml_file)),str(self.console(xml_file)),\
-str(self.parentNode(xml_file)),self.win_2(xml_file),self.doc_2(xml_file),str(self.dollar(xml_file))])
+        writer.writerow([\
+self.xml_filename(xml_file),\
+isl,\
+self.sa_decision(xml_file),\
+self.sa_rules(xml_file),\
+str(self.find_feature(r'/*@cc_on',xml_file)),\
+str(self.find_feature('wscript.shell',xml_file)),\
+str(self.find_feature('shell.application',xml_file)),\
+str(self.find_feature('scripting.filesystemobject',xml_file)),\
+self.win_1(xml_file),\
+self.doc_1(xml_file),\
+str(self.find_feature('xmlhttp',xml_file)),\
+str(self.find_feature('adodb.stream',xml_file)),\
+str(self.find_feature('getElementsByTagName',xml_file)),\
+str(self.find_feature('getElementById',xml_file)),\
+str(self.find_feature('<div',xml_file)),\
+str(self.find_feature('\\bconsole\.',xml_file)),\
+str(self.find_feature('parentNode',xml_file)),\
+self.win_2(xml_file),\
+self.doc_2(xml_file),\
+str(self.find_feature('\s\$\.',xml_file))])
         csvfile.close()
 
 
