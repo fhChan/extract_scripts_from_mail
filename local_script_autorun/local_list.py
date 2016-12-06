@@ -72,7 +72,7 @@ def local_list(srcfolder_path):
                 continue 
             if s.find('<div')>-1:
                 continue
-            if s.find('\\bconsole\.')>-1:
+            if re.search('\\bconsole\.')!=None:
                 continue
             if s.find('parentNode')>-1:
                 continue
