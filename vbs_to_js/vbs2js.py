@@ -33,7 +33,7 @@ class VBSConverter:
         output_lines = []
         for line in lines:
             line = line.strip()
-            if 'dim ' in line and ',' in line:
+            if ('dim ' in line or 'const ' in line) and ',' in line:
                 vars = line.split(',')
                 output_lines.append(vars[0])
                 for var in vars[1:]:
@@ -112,14 +112,31 @@ class VBSConverter:
         re_function_name = re.compile(r'(?:Function|Sub)[ \t]+(\w+)', re.IGNORECASE | re.MULTILINE)
         self.function_name_list_ = re.findall(re_function_name, self.content_)
 
-    def process_function_calling_return(self, lines):
+    def process_array_in_function_params(self, func_name, line):
+        matched = re.search(r'(.*)(function|sub)[ \t]*?\b' + func_name + r'\b[ \t]*?\((.+)\)(.*)', line, re.IGNORECASE)
+        if matched != None:
+            params = matched.group(3).split(',')
+            new_params = []
+            for param in params:
+                param_matched = re.search(r'\b(\w+)\b[ \t]*?\((.*)\).*', param.strip(), re.IGNORECASE)
+                if param_matched != None:
+                    new_params.append(param_matched.group(1))
+                else:
+                    new_params.append(param)
+            line = matched.group(1) + matched.group(2) + ' ' + func_name + '(' + ', '.join(new_params) + ')' + matched.group(4)
+        return line
+    def process_function_op(self, lines):
         output_lines = []
         for line in lines:
             matched_func_name_list = self.find_key(line, self.function_name_list_)
             if len(matched_func_name_list) > 0:
                 for matched_func_name in matched_func_name_list:
-                    line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?=(.*)', r'\1ret_val = \2', line)
-                    line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?(\w+.*)', r'\1'+matched_func_name + r'(\2)', line)
+                    if None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?=', line, re.IGNORECASE):
+                        line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?=(.*)', r'\1ret_val = \2', line)
+                    elif None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?\w+', line, re.IGNORECASE):
+                        line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?(\w+.*)', r'\1'+matched_func_name + r'(\2)', line)
+                    else:
+                        line = self.process_array_in_function_params(matched_func_name, line)
             output_lines.append(line)
         return output_lines
 
@@ -130,7 +147,7 @@ class VBSConverter:
         lines = self.process_statement_separator(lines)
         self.content_ = '\n'.join(lines)
         self.find_all_function_name()
-        lines = self.process_function_calling_return(lines)
+        lines = self.process_function_op(lines)
         self.content_ = '\n'.join(lines)
 
     def apply_conversion_rules(self):
