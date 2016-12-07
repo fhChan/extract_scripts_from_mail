@@ -169,6 +169,7 @@ FUNCTION\s+(\w+)(\(.*\)) --> function \1\2 {\nvar ret_val\n
 END FUNCTION --> return ret_val\n}
 SUB\s+(\w+)(\(.*?\)) --> function \1\2 {\n
 END SUB --> }
+EXIT SUB --> return\n
 
 // string concat
 & --> +
@@ -213,6 +214,9 @@ CREATEOBJECT --> new ActiveXObject
 \bXOR\b --> ^
 \bMOD\b --> %
 <> --> !=
-(\w+)\s*\\\s*(\w+)--> Math.floor(\1/\2)
+
+//Error
+Err.Raise --> // Err.Raise
 
 
+"\\" --> "\\\\"
