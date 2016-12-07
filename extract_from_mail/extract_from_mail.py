@@ -1,6 +1,15 @@
 import os, sys, email, re, base64, traceback
 from datetime import datetime
 
+def safe_b64decode(str):
+    length = len(str) % 4
+    if length == 0:
+        return base64.b64decode(str)
+    else:
+        for i in range(4 - int(length)):
+            str = str + '='
+        return base64.b64decode(str)
+
 class MailExtactor:
     """
 
@@ -40,7 +49,8 @@ class MailExtactor:
             b64_list = content.split('\n')
             if len(b64_list[-1]) != len(b64_list[0]) and len(b64_list[-2]) != len(b64_list[0]):
                 del b64_list[-1]
-            self.save_file(base64.b64decode(''.join(b64_list)), dest_file)
+            # self.save_file(base64.b64decode(''.join(b64_list)), dest_file) # raise TypeError(msg)  TypeError: Incorrect padding
+            self.save_file(safe_b64decode(''.join(b64_list)),dest_file)
         elif encoding == 'quoted-printable' and '.wsf' in filename:
             dest_dir = os.path.join(self.dest_dir, 'wsf')
             if not os.path.exists(dest_dir):
@@ -79,7 +89,7 @@ class MailExtactor:
                 if 'attachment' in content_disposition:
                     find_attachment = True
                 if not find_filename_in_content_type and 'filename' in content_disposition:
-                    mo = re.search(r'filename=[\"\']?(?P<filename>[^\"\';\r\n]*)[\"\']?', content_disposition)
+                    mo = re.search(r'filename=\s*[\"\']?(?P<filename>[^\"\';\r\n]*)[\"\']?', content_disposition)
                     if None == mo:
                         print "[REGEX ERROR] cannot find filename in content disposition"
                     else:
@@ -118,6 +128,7 @@ class MailExtactor:
             self.analyze_mail_structure(fh.read())
         self.saved_file_count += self.file_count_in_current_mail
         if self.file_count_in_current_mail == 0:
+            print 'ERROR!!!!!!!!!!!!!!!\n' * 10
             self.failed_file_count += 1
 
     def process_single_mail(self, file_path):
