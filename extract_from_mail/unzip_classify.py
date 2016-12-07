@@ -6,7 +6,6 @@ def check_file_type(content, length):
     if hexdata.startswith(r''):
         pass
 
-
 def unzip(input_folder, output_folder):
     if not os.path.exists(input_folder):
         print "[ERROR] cannot find input folder, " + input_folder
@@ -15,16 +14,18 @@ def unzip(input_folder, output_folder):
         shutil.rmtree(output_folder)
     os.makedirs(output_folder)
 
-
     for root, dirs, files in os.walk(input_folder):
         for name in files:
             cur_file_path = os.path.join(root, name)
             cur_root, ext = os.path.splitext(cur_file_path)
             if '.zip' == ext:
-                zip_file = zipfile.ZipFile(cur_file_path, 'r')
-                zip_file.extractall(output_folder)
-
-
+                try:
+                    zip_file = zipfile.ZipFile(cur_file_path, 'r')
+                    zip_file.extractall(output_folder)
+                except Exception as e:
+                    print "[ERROR] cannot unzip file:",name
+                    print e
+                    continue
 
 
 def print_usage():

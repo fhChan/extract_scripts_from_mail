@@ -28,6 +28,10 @@ def classify(input_folder, output_dir):
                 if not os.path.exists(os.path.join(output_dir,'jse')):
                     os.makedirs(os.path.join(output_dir,'jse'))
                 shutil.copy2(filename, os.path.join(output_dir,'jse'))
+            elif ext=='.vbs':
+                if not os.path.exists(os.path.join(output_dir,'vbs')):
+                    os.makedirs(os.path.join(output_dir,'vbs'))
+                shutil.copy2(filename, os.path.join(output_dir,'vbs'))
             elif ext!='.zip':
                 if not os.path.exists(os.path.join(output_dir,'others')):
                     os.makedirs(os.path.join(output_dir,'others'))
@@ -96,13 +100,14 @@ if __name__ == '__main__':
             mail_extractor.process_multiple_mail(input_dir)
 
     # unzip files
-    sys.stdout = __console__
+    sys.stdout = open(os.path.join(output_dir,'logs','unzip.log'), 'w')
     unzipped_folder = os.path.join(output_dir,'unzipped')
     if not os.path.exists(unzipped_folder):
         os.makedirs(unzipped_folder)
     unzip(extracted_folder,unzipped_folder)
 
     # classify
+    sys.stdout = __console__
     if not os.path.exists(os.path.join(output_dir,'js')):
         os.makedirs(os.path.join(output_dir,'js'))
     if not os.path.exists(os.path.join(output_dir,'wsf')):
