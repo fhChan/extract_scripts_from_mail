@@ -165,12 +165,14 @@ class VBSConverter:
     def process_known_api(self, lines):
         output_lines = []
         for line in lines:
-            if '(' in line and ')' in line:
-                output_lines.append(line)
-                continue
             matched_func_name_list = self.find_key_in_line(line, self.external_fun_list_)
             if len(matched_func_name_list) > 0:
                 for matched_func_name in matched_func_name_list:
+                    if '(' in line and ')' in line:
+                        matched = re.search(r'\.' + matched_func_name + r'\b[ \t]*?\(', line, re.IGNORECASE)
+                        if None != matched:
+                            output_lines.append(line)
+                            continue
                     matched = re.search(r'(.*?)\.' + matched_func_name + r'\b[ \t]*?(.*)', line, re.IGNORECASE)
                     if None != matched:
                         line = matched.group(1) + '.' + matched_func_name + '(' + matched.group(2) + ')'

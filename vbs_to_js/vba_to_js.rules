@@ -101,7 +101,8 @@ For\s*((\w*)\s*=\s*.*)\s*To\s*([^\r\n]*)\r? --> for (\1; \2 < \3; \2++) {\n
 \bNEXT.*\b --> }
 
 // Exit For
-\bEXIT FOR\b --> break\n}
+\bEXIT FOR\b --> break
+
 //IF EXIT FUNCTION
 IF(.*?)THEN EXIT FUNCTION --> if (\1){\nreturn ret_val\n}
 
@@ -122,17 +123,15 @@ LOOP\s*\n -->}\n
 //Do Until...Loop, eg. Do Until CQO8sw >= 53
 DO UNTIL\s*([^\n]*) --> while (!(\1)){\n
 
+// Exit Do
+\bEXIT DO\b --> break
+
 //Do...Loop While
 DO\s*\n --> do{\n
 LOOP WHILE\s*([^\n]*) --> }while (\1)
 
 //DO...Loop Until
 LOOP Until\s*([^\n]*) --> }while (!(\1))
-
-
-
-// Exit Do
-//\bEXIT DO\b --> break\n}
 
 // equal op in if
 \bIF\b +?([^<=>\n]+)=([^=\n]+) --> if \1==\2
@@ -159,7 +158,7 @@ LOOP Until\s*([^\n]*) --> }while (!(\1))
 \bEND SELECT\b --> }
 
 // case
-CASE([^:]+):(.+) --> case \1: {\2;break;}
+// CASE([^:]+):(.+) --> case \1: {\2;break;}
 
 //Array in Function param list  eg. Function Y2L78kpw(G5hNUkH9() As Byte)
 (FUNCTION.+)\((\w+)\(\).*\) --> \1(\2)
@@ -220,3 +219,5 @@ Err.Raise --> // Err.Raise
 
 
 "\\" --> "\\\\"
+
+randomize -->
