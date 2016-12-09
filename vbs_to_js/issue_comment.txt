@@ -5,3 +5,7 @@ vbs 错误：
 1. 等于号的问题
 2. On Error GoTo LHo
 4. LHo:   ：被转化
+
+
+FBWRGFU0646.vbs  from 1113_1204
+1.数组  XX（1）       反推 不是func，就是array，检查func_list

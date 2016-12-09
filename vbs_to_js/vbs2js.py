@@ -62,7 +62,8 @@ class VBSConverter:
     def process_statement_separator(self, lines):
         output_lines = []
         for line in lines:
-            if ':' in line:
+            # if ':' in line:
+            if ':' in line and '"' not in line:
                 if ("'" in line) or (re.match(r'^\s*\w+:', line))\
                         or (re.match(r'"[^"]*:[^"]*"', line))\
                         or self.is_colon_in_string(line):
@@ -132,6 +133,9 @@ class VBSConverter:
     def find_all_function_name(self):
         re_function_name = re.compile(r'(?:Function|Sub)[ \t]+(\w+)', re.IGNORECASE | re.MULTILINE)
         self.function_name_list_ = re.findall(re_function_name, self.content_)
+        # Set RutRachel = GetRef("GoBar"), RutRachel need to be put in func_list
+        re_ref_function_name = re.compile(r'(\w+)\s*=\s*getref\b', re.IGNORECASE)
+        self.function_name_list_ += re.findall(re_ref_function_name, self.content_)
 
     def process_array_in_function_params(self, func_name, line):
         matched = re.search(r'(.*)(function|sub)[ \t]*?\b' + func_name + r'\b[ \t]*?\((.+)\)(.*)', line, re.IGNORECASE)
@@ -153,10 +157,15 @@ class VBSConverter:
             matched_func_name_list = self.find_key_in_line(line, self.function_name_list_)
             if len(matched_func_name_list) > 0:
                 for matched_func_name in matched_func_name_list:
+                    # \b  matched_func_name  \b[ \t]*?=
                     if None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?=', line, re.IGNORECASE):
                         line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?=(.*)', r'\1ret_val = \2', line)
+                    # \b  matched_func_name  \b[ \t]*?\w+
                     elif None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?\w+', line, re.IGNORECASE):
-                        line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?(\w+.*)', r'\1'+matched_func_name + r'(\2)', line)
+                        line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?(\w+.*)', r'\1' + matched_func_name + r'(\2)', line)
+                    # func_name param
+                    elif None != re.search(r'^' + matched_func_name + r'\b\s*[\"\w]+\s*', line, re.IGNORECASE):
+                        line = re.sub(r'^' + matched_func_name + r'\b\s*([\"\w]+)\s*', matched_func_name + '(' + r'\1' + ')', line)
                     else:
                         line = self.process_array_in_function_params(matched_func_name, line)
             output_lines.append(line)
@@ -183,8 +192,19 @@ class VBSConverter:
             output_lines.append(line)
         return output_lines
 
+    def remove_annotation(self, lines):
+        output_lines = []
+        for line in lines:
+            line = line.strip()
+            if '\'' in line:
+                output_lines.append(line.split('\'')[0])
+            else:
+                output_lines.append(line)
+        return output_lines
+
     def process_by_lines(self):
         lines = self.content_.split('\n')
+        lines = self.remove_annotation(lines)
         lines = self.process_variables(lines)
         lines = self.process_array_op(lines)
         lines = self.process_statement_separator(lines)
@@ -201,6 +221,14 @@ class VBSConverter:
         fh.write(self.content_)
         fh.close()
 
+    def beautify_js(self):
+        self.content_ = re.sub('\n+', '\n', self.content_)
+        try:
+            import jsbeautifier
+            self.content_ = jsbeautifier.beautify(self.content_)
+        except ImportError:
+            pass
+        
     def convert(self):
         self.content_ = open(self.vbs_file_, 'r').read().lower()
         self.load_conversion_rules()
@@ -209,7 +237,22 @@ class VBSConverter:
         self.find_all_function_name()
         self.process_by_lines()
         self.apply_conversion_rules()
+        self.beautify_js()
         self.dump_to_js_file()
+
+
+def beautify_vbs(file):
+    with open(file, 'r') as vbs:
+        s = vbs.read().strip()
+        s = re.sub(r'\n\s*\n', '\n', s)
+        s = re.sub(r'\n\s*\bFunction\b', r'\n\nFunction', s)
+        s = re.sub(r'\n\s*\bSub\b', r'\n\nSub', s)
+        s = re.sub(r'End Function\b\s*\n', r'End Function\n\n', s)
+        s = re.sub(r'End Sub\b\s*\n', r'End Sub\n\n', s)        
+    fh = open(file, 'w')
+    fh.write(s)
+    fh.close()  
+
 
 def print_help():
     print """
@@ -218,6 +261,20 @@ Usage:
     """
 
 if __name__ == '__main__':
+    # use for debug
+    if len(sys.argv) == 2:
+        if os.path.isfile(sys.argv[1]):
+            beautify_vbs(sys.argv[1])
+            js_name = os.path.join(r'C:\Users\Administrator\Desktop\local_js_runtime','test.js')
+            converter = VBSConverter(sys.argv[1],'known_function_names.cfg','vba_to_js.rules', js_name)
+            converter.convert()
+        else:
+            path = r'C:\Users\Administrator\Desktop\js'
+            for vbs in os.listdir(sys.argv[1]):
+                file_path_without_ext = os.path.splitext(vbs)[0]
+                converter = VBSConverter(os.path.join(sys.argv[1],vbs),'known_function_names.cfg','vba_to_js.rules',os.path.join(path,file_path_without_ext + '.js'))
+                converter.convert()
+        exit(0)
     if len(sys.argv) != 5:
         print_help()
         exit(-1)
