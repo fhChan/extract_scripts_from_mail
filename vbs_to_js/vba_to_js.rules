@@ -225,6 +225,7 @@ CREATEOBJECT --> new ActiveXObject
 
 //Error
 Err.Raise --> // Err.Raise
+Err.Clear --> 
 
 "\\" --> "\\\\"
 

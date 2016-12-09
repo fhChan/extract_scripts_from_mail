@@ -63,7 +63,7 @@ class VBSConverter:
         output_lines = []
         for line in lines:
             # if ':' in line:
-            if ':' in line and '"' not in line:
+            if ':' in line and '"' not in line and 'case' not in line:
                 if ("'" in line) or (re.match(r'^\s*\w+:', line))\
                         or (re.match(r'"[^"]*:[^"]*"', line))\
                         or self.is_colon_in_string(line):
@@ -106,10 +106,20 @@ class VBSConverter:
 
     def process_array_op(self, lines):
         output_lines = []
+        # add array (that function return) to array_list
+        array_set = set()
+        for line in lines:
+            if 'dim' not in line and 'function' not in line and 'sub' not in line:
+                matched = re.search(r'(\w+)\(.*\)', line, re.IGNORECASE)
+                if matched is not None:
+                    array_name = matched.group(1)
+                    if re.search(r'\n\s*' + array_name + r'\b\s*[^\(]', self.content_, re.IGNORECASE) is not None:
+                        array_set.add(array_name)   
+        self.array_name_list_ = [val for val in array_set if val not in self.function_name_list_]
         for line in lines:
             if 'dim ' in line:
                 matched = re.search(r'(\w+)\(.*\)', line, re.IGNORECASE)
-                if matched != None:
+                if matched is not None:
                     array_name = matched.group(1)
                     self.array_name_list_.append(array_name)
                     output_lines.append(line)
@@ -129,6 +139,15 @@ class VBSConverter:
             else:
                 output_lines.append(line)
         return output_lines
+
+    def process_array_traversal(self):
+        # For Each RPn1 in Ar8
+        # eg.    for (var rpn1 in ar8) {
+        # lgd9 = new ActiveXObject(rpn1)  }
+        # correct expression is lgd9 = new ActiveXObject(ar8[rpn1])
+        # re_function_name = re.compile(r'for each (\w+) in (\w+)(.*)\bnext\b', re.IGNORECASE | re.MULTILINE)
+        pass
+
 
     def find_all_function_name(self):
         re_function_name = re.compile(r'(?:Function|Sub)[ \t]+(\w+)', re.IGNORECASE | re.MULTILINE)
@@ -163,7 +182,7 @@ class VBSConverter:
                     # \b  matched_func_name  \b[ \t]*?\w+
                     elif None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?\w+', line, re.IGNORECASE):
                         line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?(\w+.*)', r'\1' + matched_func_name + r'(\2)', line)
-                    # func_name param
+                    # func_name param, eg. F3 "",F3("")
                     elif None != re.search(r'^' + matched_func_name + r'\b\s*[\"\w]+\s*', line, re.IGNORECASE):
                         line = re.sub(r'^' + matched_func_name + r'\b\s*([\"\w]+)\s*', matched_func_name + '(' + r'\1' + ')', line)
                     else:
@@ -212,6 +231,9 @@ class VBSConverter:
         lines = self.process_known_api(lines)
         self.content_ = '\n'.join(lines)
 
+    def process_by_blocks(self):
+        self.process_array_traversal()
+
     def apply_conversion_rules(self):
         for matched, replaced in self.conversion_rules_:
             self.content_ = re.sub(matched, replaced, self.content_, 0, re.IGNORECASE | re.MULTILINE)
@@ -236,6 +258,7 @@ class VBSConverter:
         self.remove_module_class_name()
         self.find_all_function_name()
         self.process_by_lines()
+        self.process_by_blocks()
         self.apply_conversion_rules()
         self.beautify_js()
         self.dump_to_js_file()
