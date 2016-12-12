@@ -110,12 +110,14 @@ class VBSConverter:
         array_set = set()
         for line in lines:
             if 'dim' not in line and 'function' not in line and 'sub' not in line:
-                matched = re.search(r'(\w+)\(.*\)', line, re.IGNORECASE)
+                matched = re.search(r'(\w+)\([^=\n]+\)', line, re.IGNORECASE)
                 if matched is not None:
                     array_name = matched.group(1)
                     if re.search(r'\n\s*' + array_name + r'\b\s*[^\(]', self.content_, re.IGNORECASE) is not None:
-                        array_set.add(array_name)   
+                       array_set.add(array_name)
         self.array_name_list_ = [val for val in array_set if val not in self.function_name_list_]
+        print self.array_name_list_
+        # add array (that dim) to array_list
         for line in lines:
             if 'dim ' in line:
                 matched = re.search(r'(\w+)\(.*\)', line, re.IGNORECASE)
@@ -140,13 +142,31 @@ class VBSConverter:
                 output_lines.append(line)
         return output_lines
 
-    def process_array_traversal(self):
+    def process_array_traversal(self, lines):
         # For Each RPn1 in Ar8
         # eg.    for (var rpn1 in ar8) {
         # lgd9 = new ActiveXObject(rpn1)  }
         # correct expression is lgd9 = new ActiveXObject(ar8[rpn1])
-        # re_function_name = re.compile(r'for each (\w+) in (\w+)(.*)\bnext\b', re.IGNORECASE | re.MULTILINE)
-        pass
+        output_lines = []
+        for_each_pattern = re.compile(r'for each (\w+) in ([^\s]+)', re.IGNORECASE)
+        in_loop_flag = False
+        index_name = ''
+        array_name = ''
+        for line in lines:
+            if in_loop_flag is False:
+                param_matched = for_each_pattern.match(line.strip())
+                if param_matched is not None:
+                    index_name = param_matched.group(1)
+                    array_name = param_matched.group(2)
+                    in_loop_flag = True
+            else:
+                if line.strip().startswith('next'):
+                    in_loop_flag = False
+                else:
+                    name = '%s[%s]' % (array_name, index_name)
+                    line = line.replace(index_name,name)
+            output_lines.append(line)
+        return output_lines
 
 
     def find_all_function_name(self):
@@ -227,12 +247,10 @@ class VBSConverter:
         lines = self.process_variables(lines)
         lines = self.process_array_op(lines)
         lines = self.process_statement_separator(lines)
+        lines = self.process_array_traversal(lines)
         lines = self.process_function_op(lines)
         lines = self.process_known_api(lines)
         self.content_ = '\n'.join(lines)
-
-    def process_by_blocks(self):
-        self.process_array_traversal()
 
     def apply_conversion_rules(self):
         for matched, replaced in self.conversion_rules_:
@@ -258,7 +276,6 @@ class VBSConverter:
         self.remove_module_class_name()
         self.find_all_function_name()
         self.process_by_lines()
-        self.process_by_blocks()
         self.apply_conversion_rules()
         self.beautify_js()
         self.dump_to_js_file()
