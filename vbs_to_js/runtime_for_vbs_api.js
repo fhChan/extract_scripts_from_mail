@@ -19,6 +19,13 @@ function mid(str, starnum, endnum) {
         return null
     }
 }
+function midb(str, starnum, endnum) {
+    if (str.length >= 0) {
+        return str.substr(starnum, endnum)
+    } else {
+        return null
+    }
+}
 function asc(str){
     return str.charCodeAt(0)
 }
@@ -27,4 +34,25 @@ function ascb(str){
 }
 function getref(func){
     return eval(func)
+}
+function lcase(str){
+    return str.toLowerCase()
+}
+function ucase(str){
+    return str.toUpperCase( )
+}
+function rnd(){
+    return Math.random()
+}
+function len(object){
+    return object.length
+}
+function lenb(object){
+    return object.length
+}
+function chr(number){
+    return String.fromCharCode(number)
+}
+function cstr(number){
+    return String(cstr)
 }

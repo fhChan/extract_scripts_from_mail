@@ -140,7 +140,7 @@ LOOP Until\s*([^\n]*) --> }while (!(\1))
 \bIF\b +?([^<=>\n]+)=([^=\n]+) --> if \1==\2
 
 // if ... then
-\bIF( +?)(.*?)THEN --> if (\2) {\n
+\bIF( +?)(.*?)\bTHEN\b --> if (\2) {\n
 
 // case else
 \bCASE ELSE\b --> default
@@ -191,12 +191,6 @@ InStrRev\(\s*([^,]*)\s*,\s*([^,]*)\s*\) --> \1.lastIndexOf(\2)
 //Mid function, eg. Mid( It, InStrRev( It, "/" ) + 1 )       //absinthe
 MID\(([^,]*),([^,]*)\) -->\1.substr(\2 - 1)
 
-//Mid function, eg. Mid(Mt3, Dm + 1, 1)
-//MID\(([^,]*),([^,]*),([^,]*)\) -->\1.substr((\2 - 1), \3)
-
-//Len function, eg.Len(Mt3)
-\bLEN\((\w*?)\) --> \1.length
-
 //CreateObject
 CREATEOBJECT --> new ActiveXObject
 
@@ -235,39 +229,8 @@ Randomize -->
 //wscript.Echo("error: target folder ! found.")    //absinthe  
 WScript.Echo\((.*)\) -->  console.log(\1)
 
-//LenB()
-lenb\(([\s\w\.]*)\)  -->  \1.length 
-
-//Asc()
-//\bAsc\((.*)\) --> \1.charCodeAt(0)
-
-//CStr(), eg. CStr(Ox9)
-\bCStr\(([\w\.]*)\) --> String(\1)
-
-//Chr(), eg. Chr(56)
-\bChr\((\d+)\) --> String.fromCharCode(\1)
-
-//Chr(), eg. Chr( AscB( MidB( Zb9.ResponseBody, Ox9, 1 ) ) )  this cannot cover the last one
-\bChr\((.*)\) --> String.fromCharCode(\1)
-
-//Left(), eg. left(ma, ma.lastIndexOf("\\") - 1)
-//\bleft\(\s*([^,]*)\s*,\s*([^,]*)\s*\)  -->  \1.substring(0,\2)
-
-//Right()
-//\bright\(\s*([^,]*)\s*,\s*([^,]*)\s*\)  -->  \1.substring(\1.length-\2,\1.length)
-
-//Rnd()
-\bRnd\(\) --> Math.random()
-
-//ascb(), eg. ascb(midb('1232354235', ox9, 1))
-//\bAscb\((.*)\) --> \1.charCodeAt(0)
-
-//midb()
-\bmidb\(([^,]*),([^,]*),([^,]*)\) -->\1.substr((\2 - 1), \3)
-
 //err.number
 \berr.number --> 0
-
 
 //activexobject function case sensitive
 FolderExists --> FolderExists
