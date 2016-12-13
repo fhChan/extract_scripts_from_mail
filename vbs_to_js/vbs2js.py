@@ -287,7 +287,6 @@ class VBSConverter:
         self.beautify_js()
         self.dump_to_js_file()
 
-
 def beautify_vbs(file):
     with open(file, 'r') as vbs:
         s = vbs.read().strip()
