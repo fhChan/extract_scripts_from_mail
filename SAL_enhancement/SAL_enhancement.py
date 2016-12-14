@@ -1,11 +1,11 @@
  # Author: Feihao Chen
- # Date: 2016/12/13
+ # Date: 2016/12/14
 
 import os,sys
 import csv
 import url_rank
 import xml.etree.cElementTree as ET
-from BehaviourReport import BehaviourReport
+from behaviour_report_helper import BehaviourReport
 
 # analysis all .xml in sys.argv[1]
 # judge JS confusion and urls order
