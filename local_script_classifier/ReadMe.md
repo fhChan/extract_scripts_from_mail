@@ -6,12 +6,12 @@ Please empty the directory 'salineup_for_script_malware\\result' or drag it out 
 
 Usage:
 ------
-print "python local_script.py srcfolder_path" in command window
+print "python local_script_classifier.py srcfolder_path" in command window
 
 In the directory:
 -------------------------
 - [salineup_for_script_malware]:to analyse .js and .wsf files extracted and generate a report.
-- [local_script.py]:to implement both the two functions below.
+- [local_script——classifier.py]:to implement both the two functions below.
 - [local_script_feature.py]:to form a CSV file to display the features.
 - [local_list.py]:to list the script_name\sha1 of local scripts into local_list.txt.
 
@@ -23,6 +23,7 @@ Product:
 
 News
 ----
+- 2016-12-14:improve code and it can be used to deal with XML folder directly
 - 2016-12-1:rewrite the local_script.py in the mind of OOP
 - 2016-11-21:implement the local_script.py v1.0
 
