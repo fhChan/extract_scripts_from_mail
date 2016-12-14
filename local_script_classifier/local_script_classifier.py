@@ -101,7 +101,7 @@ Usage:
     python local_script.py XML_folder
     """
 
-def process_single_xml(result_dir):
+def print_single_result(result_dir):
     XA = xml_analyser()
     last_modified_date = 0
     last_behavior = ''
@@ -110,11 +110,13 @@ def process_single_xml(result_dir):
         mtime = os.path.getmtime(behavior_path)
         if (mtime > last_modified_date):
             last_modified_date, last_behavior = mtime, behavior_path
-    if XA.is_local_script(last_behavior):
-        print 'Is LocalScript!'
+    XA.BR = BehaviourReport(last_behavior)
+    if XA.is_local_script():
+        print '\nIt\'s local script!'
     else:
-        print 'Is Not LocalScript!'
+        print '\nIt\'s not local script!'
 
+# form a csv file to show the features
 def process_multi_xml(result_dir):
     XA = xml_analyser()
     for f in os.listdir(result_dir):
@@ -134,8 +136,8 @@ if __name__ == '__main__':
     with open('SAL.log', 'w') as fout:
         subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc \
         --script-malware=true --loglevel=all \"' + target_path, stdout=fout)
-    result_dir = os.path.join('salineup_for_script_malware','result')
 
+    result_dir = os.path.join('salineup_for_script_malware','result')
     if os.path.isfile(target_path):
         process_single_xml(result_dir)
     else:
