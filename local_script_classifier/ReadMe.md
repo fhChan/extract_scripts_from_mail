@@ -1,6 +1,7 @@
 local_script_classifier
 ===============
-Please empty the directory 'salineup_for_script_malware\\result' or drag it out each time you use this tool!!!
+Please put 'salineup_for_script_malware' under the root folder the first time you use this tool and 
+remember to empty the directory 'salineup_for_script_malware\\result' or drag it out each time you use it!
 
 [local_script_classifier] is a automatic tool to detect whether a script file is based on local environment.
 
@@ -26,5 +27,3 @@ News
 - 2016-12-14:improve code
 - 2016-12-1:rewrite the local_script.py in the mind of OOP
 - 2016-11-21:implement the local_script.py v1.0
-
-Note:"srcfolder_path" should contain script files.
