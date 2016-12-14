@@ -109,7 +109,7 @@ class VBSConverter:
         # add array to array_list
         array_set = set()
         for line in lines:
-            matched = re.search(r'\b' + r'dim|sub|function' + r'\b',line)
+            matched = re.search(r'\b(dim|sub|function)\b',line)
             if matched is None:
                 matched = re.search(r'[^\.]\b(\w+)\s*\(\s*[^\"=\n\s]+\s*\)', line, re.IGNORECASE)
                 if matched is not None:
@@ -233,17 +233,6 @@ class VBSConverter:
             output_lines.append(line)
         return output_lines
 
-    def process_function_call(self, lines):
-        output_lines = []
-        for line in lines:
-            matched_func_name_list = self.find_key_in_line(line, self.function_name_list_)
-            if len(matched_func_name_list) > 0:
-                for matched_func_name in matched_func_name_list:
-                    if re.search(r'^' + matched_func_name + r'\b\s*[\"\w]+\s*', line, re.IGNORECASE) is not None:
-                        line = re.sub(r'^' + matched_func_name + r'\b\s*([\"\w]+)\s*', matched_func_name + '(' + r'\1' + ')', line)
-            output_lines.append(line)
-        return output_lines
-
     def process_known_api(self, lines):
         output_lines = []
         for line in lines:
@@ -286,7 +275,6 @@ class VBSConverter:
         lines = self.process_backslant_in_str(lines)
         lines = self.process_array_traversal(lines)
         lines = self.process_function_op(lines)
-        # lines = self.process_function_call(lines)
         lines = self.process_known_api(lines)
         self.content_ = '\n'.join(lines)
 
@@ -320,7 +308,7 @@ class VBSConverter:
         self.process_by_lines()
         self.replace_api()
         self.apply_conversion_rules()
-        self.beautify_js()
+        # self.beautify_js()
         self.dump_to_js_file()
 
 
@@ -353,7 +341,7 @@ if __name__ == '__main__':
             converter = VBSConverter(sys.argv[1], 'known_function_names.cfg', 'vba_to_js.rules', js_name)
             converter.convert()
         else:
-            path = r'C:\Users\Administrator\Desktop\1027js'
+            path = r'C:\Users\Administrator\Desktop\1113js'
             for vbs in os.listdir(sys.argv[1]):
                 if vbs.endswith(r'.vbs'):
                     print vbs
