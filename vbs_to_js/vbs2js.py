@@ -14,6 +14,7 @@ class VBSConverter:
         self.function_name_list_ = []
         self.external_fun_list_ = []
         self.js_file_ = js_file
+        self.runtime_for_vbs_api = 'runtime_for_vbs_api.js'
         self.re_module_name_ = re.compile(r'VBA MACRO (\w*?)\.', re.IGNORECASE | re.MULTILINE)
 
     def load_conversion_rules(self):
@@ -106,17 +107,16 @@ class VBSConverter:
 
     def process_array_op(self, lines):
         output_lines = []
-        # add array (that function return) to array_list
+        # add array to array_list
         array_set = set()
         for line in lines:
             if 'dim' not in line and 'function' not in line and 'sub' not in line:
-                matched = re.search(r'(\w+)\([^=\n]+\)', line, re.IGNORECASE)
+                matched = re.search(r'(\w+)\(\s*[^=\n\s]+\s*\)', line, re.IGNORECASE)
                 if matched is not None:
                     array_name = matched.group(1)
-                    if re.search(r'\n\s*' + array_name + r'\b\s*[^\(]', self.content_, re.IGNORECASE) is not None:
+                    if re.search(r'\b' + array_name + r'\b\s*[^\(]', self.content_, re.IGNORECASE) is not None:
                        array_set.add(array_name)
-        self.array_name_list_ = [val for val in array_set if val not in self.function_name_list_]
-        print self.array_name_list_
+        self.array_name_list_ = [val for val in array_set if val not in self.function_name_list_ and val not in self.external_fun_list_]
         # add array (that dim) to array_list
         for line in lines:
             if 'dim ' in line:
@@ -143,10 +143,6 @@ class VBSConverter:
         return output_lines
 
     def process_array_traversal(self, lines):
-        # For Each RPn1 in Ar8
-        # eg.    for (var rpn1 in ar8) {
-        # lgd9 = new ActiveXObject(rpn1)  }
-        # correct expression is lgd9 = new ActiveXObject(ar8[rpn1])
         output_lines = []
         for_each_pattern = re.compile(r'for each (\w+) in ([^\s]+)', re.IGNORECASE)
         in_loop_flag = False
@@ -164,10 +160,9 @@ class VBSConverter:
                     in_loop_flag = False
                 else:
                     name = '%s[%s]' % (array_name, index_name)
-                    line = line.replace(index_name,name)
+                    line = re.sub(r'\b' + index_name + r'\b', name, line)
             output_lines.append(line)
         return output_lines
-
 
     def find_all_function_name(self):
         re_function_name = re.compile(r'(?:Function|Sub)[ \t]+(\w+)', re.IGNORECASE | re.MULTILINE)
@@ -175,6 +170,9 @@ class VBSConverter:
         # Set RutRachel = GetRef("GoBar"), RutRachel need to be put in func_list
         re_ref_function_name = re.compile(r'(\w+)\s*=\s*getref\b', re.IGNORECASE)
         self.function_name_list_ += re.findall(re_ref_function_name, self.content_)
+        # parse function_name in runtime_for_vbs_api
+        re_function_name = re.compile(r'(?:function)\s*(\w+)', re.IGNORECASE | re.MULTILINE)
+        self.function_name_list_ += re.findall(re_function_name, open(self.runtime_for_vbs_api).read())       
 
     def process_array_in_function_params(self, func_name, line):
         matched = re.search(r'(.*)(function|sub)[ \t]*?\b' + func_name + r'\b[ \t]*?\((.+)\)(.*)', line, re.IGNORECASE)
@@ -202,11 +200,19 @@ class VBSConverter:
                     # \b  matched_func_name  \b[ \t]*?\w+
                     elif None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?\w+', line, re.IGNORECASE):
                         line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?(\w+.*)', r'\1' + matched_func_name + r'(\2)', line)
-                    # func_name param, eg. F3 "",F3("")
-                    elif None != re.search(r'^' + matched_func_name + r'\b\s*[\"\w]+\s*', line, re.IGNORECASE):
-                        line = re.sub(r'^' + matched_func_name + r'\b\s*([\"\w]+)\s*', matched_func_name + '(' + r'\1' + ')', line)
                     else:
                         line = self.process_array_in_function_params(matched_func_name, line)
+            output_lines.append(line)
+        return output_lines
+
+    def process_function_call(self, lines):
+        output_lines = []
+        for line in lines:
+            matched_func_name_list = self.find_key_in_line(line, self.function_name_list_)
+            if len(matched_func_name_list) > 0:
+                for matched_func_name in matched_func_name_list:
+                    if None != re.search(r'^' + matched_func_name + r'\b\s*[\"\w]+\s*', line, re.IGNORECASE):
+                        line = re.sub(r'^' + matched_func_name + r'\b\s*([\"\w]+)\s*', matched_func_name + '(' + r'\1' + ')', line)
             output_lines.append(line)
         return output_lines
 
@@ -249,6 +255,7 @@ class VBSConverter:
         lines = self.process_statement_separator(lines)
         lines = self.process_array_traversal(lines)
         lines = self.process_function_op(lines)
+        lines = self.process_function_call(lines)
         lines = self.process_known_api(lines)
         self.content_ = '\n'.join(lines)
 
@@ -280,7 +287,6 @@ class VBSConverter:
         self.beautify_js()
         self.dump_to_js_file()
 
-
 def beautify_vbs(file):
     with open(file, 'r') as vbs:
         s = vbs.read().strip()
@@ -309,11 +315,12 @@ if __name__ == '__main__':
             converter = VBSConverter(sys.argv[1],'known_function_names.cfg','vba_to_js.rules', js_name)
             converter.convert()
         else:
-            path = r'C:\Users\Administrator\Desktop\js'
+            path = r'C:\Users\Administrator\Desktop\b'
             for vbs in os.listdir(sys.argv[1]):
-                file_path_without_ext = os.path.splitext(vbs)[0]
-                converter = VBSConverter(os.path.join(sys.argv[1],vbs),'known_function_names.cfg','vba_to_js.rules',os.path.join(path,file_path_without_ext + '.js'))
-                converter.convert()
+                if vbs.endswith(r'.vbs'):
+                    file_path_without_ext = os.path.splitext(vbs)[0]
+                    converter = VBSConverter(os.path.join(sys.argv[1],vbs),'known_function_names.cfg','vba_to_js.rules',os.path.join(path,file_path_without_ext + '.js'))
+                    converter.convert()
         exit(0)
     if len(sys.argv) != 5:
         print_help()
