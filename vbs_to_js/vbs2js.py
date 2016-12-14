@@ -1,10 +1,10 @@
 import os, sys, re
+from api_replace import APIConverter
 
 
 class VBSConverter:
     """
     """
-
     def __init__(self, vbs_file, function_list_file, conversion_rules_path, js_file):
         self.vbs_file_ = vbs_file
         self.external_fun_list_file_ = function_list_file
@@ -14,7 +14,7 @@ class VBSConverter:
         self.function_name_list_ = []
         self.external_fun_list_ = []
         self.js_file_ = js_file
-        self.runtime_for_vbs_api = 'runtime_for_vbs_api.js'
+        self.runtime_for_vbs_api = 'runtime_for_win_host_vbs.js'
         self.re_module_name_ = re.compile(r'VBA MACRO (\w*?)\.', re.IGNORECASE | re.MULTILINE)
 
     def load_conversion_rules(self):
@@ -81,14 +81,14 @@ class VBSConverter:
         matched_key_list = []
         for key in key_list:
             lower_key = key.lower()
-            if lower_key in line:
+            matched = re.search(r'\b' + lower_key + r'\b', line, re.IGNORECASE)
+            if matched is not None:
                 matched_key_list.append(key)
         return matched_key_list
 
     def get_bracket_dict(self, line):
         bracket_ops_stack = []
         bracket_dict = {}
-
         length_of_line = len(line)
         for i in xrange(length_of_line):
             each_char = line[i]
@@ -105,41 +105,68 @@ class VBSConverter:
         else:
             return bracket_dict
 
-    def process_array_op(self, lines):
-        output_lines = []
+    def find_array_name(self, lines):
         # add array to array_list
         array_set = set()
         for line in lines:
-            if 'dim' not in line and 'function' not in line and 'sub' not in line:
-                matched = re.search(r'(\w+)\(\s*[^=\n\s]+\s*\)', line, re.IGNORECASE)
+            matched = re.search(r'\b' + r'dim|sub|function' + r'\b',line)
+            if matched is None:
+                matched = re.search(r'[^\.]\b(\w+)\s*\(\s*[^\"=\n\s]+\s*\)', line, re.IGNORECASE)
                 if matched is not None:
                     array_name = matched.group(1)
-                    if re.search(r'\b' + array_name + r'\b\s*[^\(]', self.content_, re.IGNORECASE) is not None:
-                       array_set.add(array_name)
+                    matched = re.search(r'\bset\b\s*\b' + array_name + r'\b', self.content_, re.IGNORECASE)
+                    if matched is None:
+                        array_set.add(array_name)
         self.array_name_list_ = [val for val in array_set if val not in self.function_name_list_ and val not in self.external_fun_list_]
+        if self.array_name_list_.count('createobject') > 0:
+            self.array_name_list_.remove('createobject')
+
+    def process_array_op(self, lines):
+        output_lines = []
         # add array (that dim) to array_list
         for line in lines:
-            if 'dim ' in line:
-                matched = re.search(r'(\w+)\(.*\)', line, re.IGNORECASE)
+            matched = re.search(r'^\bredim\b',line)
+            if matched is None:
+                matched = re.search(r'\bdim\b',line)
                 if matched is not None:
-                    array_name = matched.group(1)
-                    self.array_name_list_.append(array_name)
+                    matched = re.search(r'(\w+)\(.*\)', line, re.IGNORECASE)
+                    if matched is not None:
+                        array_name = matched.group(1)
+                        self.array_name_list_.append(array_name)
+                        output_lines.append(line)
+                        continue
+                matched_array_name_list = self.find_key_in_line(line, self.array_name_list_)
+                if len(matched_array_name_list) > 0:
+                    bracket_dict = self.get_bracket_dict(line)
+                    str_list = list(line)
+                    for array_name in matched_array_name_list:
+                        pattern = array_name + r'\s*\('
+                        for m in re.finditer(pattern, line):
+                            match_str = m.group()
+                            left_bracket_index = m.start() + len(match_str) - 1
+                            str_list[left_bracket_index] = '['
+                            str_list[bracket_dict[left_bracket_index]] = ']'
+                    output_lines.append(''.join(str_list))
+                else:
                     output_lines.append(line)
-                    continue
-            matched_array_name_list = self.find_key_in_line(line, self.array_name_list_)
-            if len(matched_array_name_list) > 0:
-                bracket_dict = self.get_bracket_dict(line)
-                str_list = list(line)
-                for array_name in matched_array_name_list:
-                    pattern = array_name + r'\s*\('
-                    for m in re.finditer(pattern, line):
-                        match_str = m.group()
-                        left_bracket_index = m.start() + len(match_str) - 1
-                        str_list[left_bracket_index] = '['
-                        str_list[bracket_dict[left_bracket_index]] = ']'
-                output_lines.append(''.join(str_list))
             else:
                 output_lines.append(line)
+        return output_lines
+
+    def process_backslant_in_str(self, lines):
+        output_lines = []
+        backslant_parttern = re.compile(r'\"[^\"]*\\[^\"]*\"')
+        for line in lines:
+            matched = backslant_parttern.search(line)
+            if matched is not None:
+                snippets = line.split('\"')
+                new_snippets = []
+                for i, snippet in enumerate(snippets):
+                    if i % 2 == 1:
+                        snippet = snippet.replace('\\','\\\\')
+                    new_snippets.append(snippet)
+                line = '\"'.join(new_snippets)
+            output_lines.append(line)
         return output_lines
 
     def process_array_traversal(self, lines):
@@ -172,16 +199,16 @@ class VBSConverter:
         self.function_name_list_ += re.findall(re_ref_function_name, self.content_)
         # parse function_name in runtime_for_vbs_api
         re_function_name = re.compile(r'(?:function)\s*(\w+)', re.IGNORECASE | re.MULTILINE)
-        self.function_name_list_ += re.findall(re_function_name, open(self.runtime_for_vbs_api).read())       
+        self.function_name_list_ += re.findall(re_function_name, open(self.runtime_for_vbs_api).read())
 
     def process_array_in_function_params(self, func_name, line):
         matched = re.search(r'(.*)(function|sub)[ \t]*?\b' + func_name + r'\b[ \t]*?\((.+)\)(.*)', line, re.IGNORECASE)
-        if matched != None:
+        if matched is not None:
             params = matched.group(3).split(',')
             new_params = []
             for param in params:
                 param_matched = re.search(r'\b(\w+)\b[ \t]*?\((.*)\).*', param.strip(), re.IGNORECASE)
-                if param_matched != None:
+                if param_matched is not None:
                     new_params.append(param_matched.group(1))
                 else:
                     new_params.append(param)
@@ -191,17 +218,18 @@ class VBSConverter:
     def process_function_op(self, lines):
         output_lines = []
         for line in lines:
-            matched_func_name_list = self.find_key_in_line(line, self.function_name_list_)
-            if len(matched_func_name_list) > 0:
-                for matched_func_name in matched_func_name_list:
-                    # \b  matched_func_name  \b[ \t]*?=
-                    if None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?=', line, re.IGNORECASE):
-                        line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?=(.*)', r'\1ret_val = \2', line)
-                    # \b  matched_func_name  \b[ \t]*?\w+
-                    elif None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?\w+', line, re.IGNORECASE):
-                        line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?(\w+.*)', r'\1' + matched_func_name + r'(\2)', line)
-                    else:
-                        line = self.process_array_in_function_params(matched_func_name, line)
+            if 'set' not in line:
+                matched_func_name_list = self.find_key_in_line(line, self.function_name_list_)
+                if len(matched_func_name_list) > 0:
+                    for matched_func_name in matched_func_name_list:
+                        # \b  matched_func_name  \b[ \t]*?=
+                        if None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?=', line, re.IGNORECASE):
+                            line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?=(.*)', r'\1ret_val = \2', line)
+                        # \b  matched_func_name  \b[ \t]*?\w+
+                        elif None != re.search(r'\b' + matched_func_name + r'\b[ \t]*?[\w\"]+', line, re.IGNORECASE):
+                            line = re.sub(r'(.*?)\b' + matched_func_name + r'\b[ \t]*?([\w\"].*)', r'\1' + matched_func_name + r'(\2)', line)
+                        else:
+                            line = self.process_array_in_function_params(matched_func_name, line)
             output_lines.append(line)
         return output_lines
 
@@ -211,7 +239,7 @@ class VBSConverter:
             matched_func_name_list = self.find_key_in_line(line, self.function_name_list_)
             if len(matched_func_name_list) > 0:
                 for matched_func_name in matched_func_name_list:
-                    if None != re.search(r'^' + matched_func_name + r'\b\s*[\"\w]+\s*', line, re.IGNORECASE):
+                    if re.search(r'^' + matched_func_name + r'\b\s*[\"\w]+\s*', line, re.IGNORECASE) is not None:
                         line = re.sub(r'^' + matched_func_name + r'\b\s*([\"\w]+)\s*', matched_func_name + '(' + r'\1' + ')', line)
             output_lines.append(line)
         return output_lines
@@ -220,21 +248,22 @@ class VBSConverter:
         output_lines = []
         for line in lines:
             matched_func_name_list = self.find_key_in_line(line, self.external_fun_list_)
+            modified_flag = False
             if len(matched_func_name_list) > 0:
                 for matched_func_name in matched_func_name_list:
                     if '(' in line and ')' in line:
                         matched = re.search(r'\.' + matched_func_name + r'\b[ \t]*?\(', line, re.IGNORECASE)
-                        if None != matched:
+                        if matched is not None:
+                            modified_flag = True
                             output_lines.append(line)
                             continue
                     matched = re.search(r'(.*?)\.' + matched_func_name + r'\b[ \t]*?(.*)', line, re.IGNORECASE)
-                    if None != matched:
+                    if matched is not None:
                         line = matched.group(1) + '.' + matched_func_name + '(' + matched.group(2) + ')'
                         # following code doesn't work! why?
                         # line = re.sub(r'(.*?)\.' + matched_func_name + r'\b(.*)', r'\1' + matched_func_name + r'(\2)', line, re.IGNORECASE)
-                    else:
-                        pass
-            output_lines.append(line)
+            if modified_flag is False:
+                output_lines.append(line)
         return output_lines
 
     def remove_annotation(self, lines):
@@ -251,11 +280,13 @@ class VBSConverter:
         lines = self.content_.split('\n')
         lines = self.remove_annotation(lines)
         lines = self.process_variables(lines)
+        self.find_array_name(lines)
         lines = self.process_array_op(lines)
         lines = self.process_statement_separator(lines)
+        lines = self.process_backslant_in_str(lines)
         lines = self.process_array_traversal(lines)
         lines = self.process_function_op(lines)
-        lines = self.process_function_call(lines)
+        # lines = self.process_function_call(lines)
         lines = self.process_known_api(lines)
         self.content_ = '\n'.join(lines)
 
@@ -269,13 +300,17 @@ class VBSConverter:
         fh.close()
 
     def beautify_js(self):
-        self.content_ = re.sub('\n+', '\n', self.content_)
+        self.content_ = re.sub('\n\s*\n', '\n', self.content_)
         try:
             import jsbeautifier
             self.content_ = jsbeautifier.beautify(self.content_)
         except ImportError:
             pass
-        
+
+    def replace_api(self):
+        converter = APIConverter(self.content_)
+        self.content_ = converter.process_str()
+
     def convert(self):
         self.content_ = open(self.vbs_file_, 'r').read().lower()
         self.load_conversion_rules()
@@ -283,9 +318,11 @@ class VBSConverter:
         self.remove_module_class_name()
         self.find_all_function_name()
         self.process_by_lines()
+        self.replace_api()
         self.apply_conversion_rules()
         self.beautify_js()
         self.dump_to_js_file()
+
 
 def beautify_vbs(file):
     with open(file, 'r') as vbs:
@@ -294,10 +331,10 @@ def beautify_vbs(file):
         s = re.sub(r'\n\s*\bFunction\b', r'\n\nFunction', s)
         s = re.sub(r'\n\s*\bSub\b', r'\n\nSub', s)
         s = re.sub(r'End Function\b\s*\n', r'End Function\n\n', s)
-        s = re.sub(r'End Sub\b\s*\n', r'End Sub\n\n', s)        
+        s = re.sub(r'End Sub\b\s*\n', r'End Sub\n\n', s)
     fh = open(file, 'w')
     fh.write(s)
-    fh.close()  
+    fh.close()
 
 
 def print_help():
@@ -306,20 +343,22 @@ Usage:
     python vbs2js.py input_vbs_file function_list_file input_conversion_rules_file output_js_file
     """
 
+
 if __name__ == '__main__':
     # use for debug
     if len(sys.argv) == 2:
         if os.path.isfile(sys.argv[1]):
             beautify_vbs(sys.argv[1])
-            js_name = os.path.join(r'C:\Users\Administrator\Desktop\local_js_runtime','test.js')
-            converter = VBSConverter(sys.argv[1],'known_function_names.cfg','vba_to_js.rules', js_name)
+            js_name = os.path.join(r'C:\Users\Administrator\Desktop\local_js_runtime', 'test.js')
+            converter = VBSConverter(sys.argv[1], 'known_function_names.cfg', 'vba_to_js.rules', js_name)
             converter.convert()
         else:
-            path = r'C:\Users\Administrator\Desktop\b'
+            path = r'C:\Users\Administrator\Desktop\1027js'
             for vbs in os.listdir(sys.argv[1]):
                 if vbs.endswith(r'.vbs'):
+                    print vbs
                     file_path_without_ext = os.path.splitext(vbs)[0]
-                    converter = VBSConverter(os.path.join(sys.argv[1],vbs),'known_function_names.cfg','vba_to_js.rules',os.path.join(path,file_path_without_ext + '.js'))
+                    converter = VBSConverter(os.path.join(sys.argv[1], vbs), 'known_function_names.cfg', 'vba_to_js.rules', os.path.join(path,file_path_without_ext + '.js'))
                     converter.convert()
         exit(0)
     if len(sys.argv) != 5:

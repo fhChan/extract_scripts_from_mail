@@ -56,3 +56,39 @@ function chr(number){
 function cstr(number){
     return String(cstr)
 }
+function lbound(array){
+    return 0
+}
+function ubound(array){
+    return array.length - 1
+}
+function chrw(number){
+    return String.fromCharCode(number)
+}
+function ascw(str){
+    return str.charCodeAt(0)
+}
+function instrrev(str1,str2){
+    return str1.lastIndexOf(str2) 
+}
+function space(object){
+    return ' '.repeat(object)
+}
+function split(str1,str2){
+    return str1.split(str2)
+}
+function cdbl(number){
+    return parseFloat(number)
+}
+function int(str){
+    return Math.floor(str)
+} 
+function cint(str){
+    return Math.round(str)
+}
+function isarray(object){
+    return Object.prototype.toString.call(object) === '[object Array]'; 
+}
+function array(object){
+    
+}

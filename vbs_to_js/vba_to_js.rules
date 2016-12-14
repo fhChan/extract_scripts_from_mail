@@ -92,19 +92,19 @@ DIM\s+(\w+)(\(.+\)) --> var \1 = new Array(\2 + 1)
 (DIM|CONST)\s+([^\r\n]*) --> var \2
 
 //for loop step
-For\s*((\w*)\s*=\s*[^\s]*)\s*To\s*([^\s\r\n]*)\s*Step\s*([^\s\r\n]*)\r? -->  for (\1; \2 < \3; \2+=\4) {\n
+\bFor\b\s*((\w*)\s*=\s*[^\s]*)\s*To\s*([^\s\r\n]*)\s*Step\s*([^\s\r\n]*)\r? -->  for (\1; \2 < \3; \2+=\4) {\n
 
 // for loop
-For\s*((\w*)\s*=\s*.*)\s*To\s*([^\r\n]*)\r? --> for (\1; \2 < \3; \2++) {\n
+\bFor\b\s*((\w*)\s*=\s*.*)\s*To\s*([^\r\n]*)\r? --> for (\1; \2 < \3; \2++) {\n
 
 // for each
-\bFOR EACH (\w+)\s*IN\s*(\w+) --> for (var \1 in \2) {\n
+\bFor\b EACH (\w+)\s*IN\s*(\w+) --> for (var \1 in \2) {\n
 
 // next
 \bNEXT.*\b --> }
 
 // Exit For
-\bEXIT FOR\b --> break
+\bEXIT \bFor\b --> break
 
 //IF EXIT FUNCTION
 IF(.*?)THEN EXIT FUNCTION --> if (\1){\nreturn ret_val\n}
@@ -176,38 +176,11 @@ EXIT SUB --> return\n
 // string concat
 & --> +
 
-//UBOUNTD function, eg. UBound(Zx6)
-\bUBOUND\((\w*?)\) --> (\1.length - 1)
-
-//ChrW function, eg. ChrW
-\bCHRW\b --> String.fromCharCode
-
-//AscW function, eg. AscW(Mid(Mt3, Dm + 1, 1))
-ASCW(\(.*\)) --> \1.charCodeAt(0)
-
-//InStrRev(), eg. InStrRev( It, "/" )         //absinthe
-InStrRev\(\s*([^,]*)\s*,\s*([^,]*)\s*\) --> \1.lastIndexOf(\2) 
-
-//Mid function, eg. Mid( It, InStrRev( It, "/" ) + 1 )       //absinthe
+//Mid function, eg. Mid( It, InStrRev( It, "/" ) + 1 )
 MID\(([^,]*),([^,]*)\) -->\1.substr(\2 - 1)
 
 //CreateObject
 CREATEOBJECT --> new ActiveXObject
-
-//Space function
-\bSPACE\b --> ' '.repeat
-
-//Split function, eg. Split(HPp, " ")
-\bSPLIT\(([^,]*),([^,]*)\) --> \1.split(\2)
-
-//CDbl function, eg. CDbl(AFf)
-\bCDBL\b -->parseFloat
-
-//Int functon, eg. Int(CDbl(AFf)
-\bINT\b --> Math.floor
-
-//CInt function
-\bCINT\b --> Math.round
 
 //operators
 \bAND\b --> &&
@@ -232,8 +205,5 @@ WScript.Echo\((.*)\) -->  console.log(\1)
 //err.number
 \berr.number --> 0
 
-//activexobject function case sensitive
-FolderExists --> FolderExists
-FileExists --> FileExists
-BuildPath --> BuildPath
-OpenTextFile --> OpenTextFile
+//Set input_stream         = Nothing
+\b(\w+)\s*=\s*nothing  --> \1 = null

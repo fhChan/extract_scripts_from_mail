@@ -8,6 +8,30 @@ vbs 错误：
 
 
 
+12/14
+problem:
+def process_known_api(self, lines)  error
+wscript.sleep(sh)
+wscript.sleep(sh)
+solution:
+update process_known_api(self, lines)
+
+12/13
+problem:
+api caseignore
+solution:
+add api_replace.py/api_names.cfg
+
+problem:
+'\' in str
+solution:
+add def process_backslant_in_str(self, lines)
+
+problem:
+environment["temp"]
+1113vbs\87408596-NR1207.vbs
+solution:
+implement in runtime_win
 
 
 12/12
@@ -16,8 +40,6 @@ array in function param
 1027-1109   budget 4CD96D2 xls.vbs    hj
 solution:
 extract all XX() name XX, delete function name,this solution need completed function list
-status:
-unsolved
 
 problem:
 # For Each RPn1 in Ar8
@@ -43,7 +65,7 @@ update def find_all_function_name(self)
 problem:
 # func_name param, eg. F3 "",F3("")
 solution:
-add def process_function_call(self, lines)
+update def process_function_op(self, lines)
 
 problem:
 js is ugly
