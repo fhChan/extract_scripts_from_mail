@@ -26,22 +26,31 @@ class BehaviourReport(object):
         with open(xml_file,'r') as file:
             return file.read()
 
-    # step over the first two pairs js tag
     def behaviour_reader(self):
-        js_tag='<evidence type="javascript"'
-        s=self.line_reader
-        i1=s.find(js_tag)+20
-        i2=s.find(js_tag,i1)+20
-        index=s.find(js_tag,i2)
-        s=s[index+20:].lower()
-        return s
+        s=''
+        label=0
+        for e in self.root: 
+            if e.tag!='evidence':
+                continue
+            if e.attrib['type']=='javascript' and '// This is JS Runtime file' in e[2].text:
+                label=1
+                continue
+            if e.attrib['type']=='javascript_behavior' and label==1:
+                label=0
+                continue
+            s=s+e[-1].text
+        return s.lower()
 
     def get_name(self):
         return self.root[0].text
 
     def get_decision(self):
-        return self.root[4].text
+        for e in self.root:
+            if e.tag=='decision':
+                return e.text
 
     def get_rules(self):
-        return ';'.join(x.text for x in self.root[5])
+        for e in self.root:
+            if e.tag=='matched_rules':
+                return ';'.join(x.text for x in e)
 

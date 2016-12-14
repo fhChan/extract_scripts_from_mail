@@ -101,19 +101,19 @@ Usage:
     python local_script.py XML_folder
     """
 
-# def process_single_xml(result_dir):
-#     XA = xml_analyser()
-#     last_modified_date = 0
-#     last_behavior = ''
-#     for behavior in os.listdir(result_dir):
-#         behavior_path = os.path.join(result_dir, behavior)
-#         mtime = os.path.getmtime(behavior_path)
-#         if (mtime > last_modified_date):
-#             last_modified_date, last_behavior = mtime, behavior_path
-#     if XA.is_local_script(last_behavior):
-#         print 'Is LocalScript!'
-#     else:
-#         print 'Is Not LocalScript!'
+def process_single_xml(result_dir):
+    XA = xml_analyser()
+    last_modified_date = 0
+    last_behavior = ''
+    for behavior in os.listdir(result_dir):
+        behavior_path = os.path.join(result_dir, behavior)
+        mtime = os.path.getmtime(behavior_path)
+        if (mtime > last_modified_date):
+            last_modified_date, last_behavior = mtime, behavior_path
+    if XA.is_local_script(last_behavior):
+        print 'Is LocalScript!'
+    else:
+        print 'Is Not LocalScript!'
 
 def process_multi_xml(result_dir):
     XA = xml_analyser()
@@ -130,11 +130,13 @@ if __name__ == '__main__':
         print_usage()
         exit(-1)
 
-    # target_path = sys.argv[1]
-    # with open('SAL.log', 'w') as fout:
-    #     subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc \
-    #     --script-malware=true --loglevel=all \"' + target_path, stdout=fout)
-    # result_dir = os.path.join('salineup_for_script_malware','result')
+    target_path = sys.argv[1]
+    with open('SAL.log', 'w') as fout:
+        subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc \
+        --script-malware=true --loglevel=all \"' + target_path, stdout=fout)
+    result_dir = os.path.join('salineup_for_script_malware','result')
 
-    result_dir = sys.argv[1]
-    process_multi_xml(result_dir)
+    if os.path.isfile(target_path):
+        process_single_xml(result_dir)
+    else:
+        process_multi_xml(result_dir)
