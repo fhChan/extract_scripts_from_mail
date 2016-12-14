@@ -24,6 +24,6 @@ Product:
 
 News
 ----
-- 2016-12-14:improve code
+- 2016-12-14:separate behaviour_report_helper
 - 2016-12-1:rewrite the local_script.py in the mind of OOP
 - 2016-11-21:implement the local_script.py v1.0

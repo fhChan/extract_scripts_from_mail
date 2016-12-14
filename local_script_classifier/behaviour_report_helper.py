@@ -1,5 +1,5 @@
  # Author: Feihao Chen
- # Date: 2016/12/13
+ # Date: 2016/12/14
 
 import os,sys
 import xml.etree.cElementTree as ET
@@ -53,4 +53,3 @@ class BehaviourReport(object):
         for e in self.root:
             if e.tag=='matched_rules':
                 return ';'.join(x.text for x in e)
-

@@ -1,10 +1,10 @@
  # Author: Feihao Chen
- # Date: 2016/12/13
+ # Date: 2016/12/14
 
 import os,sys,re
 import csv
 import subprocess
-from BehaviourReport import BehaviourReport
+from behaviour_report_helper import BehaviourReport
 
 class xml_analyser(object):
     """
@@ -19,11 +19,6 @@ class xml_analyser(object):
 'window.xxx','document.xxx','xmlhttp','adodb.stream','getElementsByTagName','getElementById','<div','console','parentNode',\
 'window[xxx]','document[xxx]','$.'])
         csvfile.close()
-
-    # def xml_stru_error(self):
-    #     s=self.f_reader(xml_file)
-    #     if s.count(js_tag)<3:
-    #         print 'xml stru error: '
 
     def behaviour_reader(self):
         return self.BR.behaviour_reader
@@ -98,7 +93,7 @@ str(self.find_feature('\s\$\.'))])
 def print_usage():
     print """
 Usage:
-    python local_script.py XML_folder
+    python local_script_classifier.py sample\samplefolder
     """
 
 def print_single_result(result_dir):
