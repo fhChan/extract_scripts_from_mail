@@ -14,16 +14,11 @@ def curr_time():
 class FlashUnpackHelper:
     def __init__(self):
         self.dumpTimeout = False
-        self.file_path = ''
         self.path = os.path.split(os.path.realpath(__file__))[0]
         self.sulo_path = os.path.join(self.path, 'sulo')
-        self.root_path = sys.path[0]
         self.des_path = self.path
         self.check_env()
         self.clean_env()
-
-    def set_file_path(self, file_path):
-        self.file_path = file_path
 
     def set_des_path(self, des_path):
         self.des_path = des_path
@@ -45,11 +40,11 @@ class FlashUnpackHelper:
                 file_name = os.path.join(self.des_path, f)
                 os.remove(file_name)               
 
-    def dump_flash(self):
+    def dump_flash(self, file_path):
         self.dumpTimeout = False
         # f0fad08da4212cc398160c38d2ba1f8a1930cfd1  10->dump,11->no dump
-        # solu_cmd = '%s\pin -t sulo.dll -- flashplayer10_3r181_23_win_sa.exe %s' % (self.sulo_path, self.file_path)
-        solu_cmd = '%s\pin -t sulo.dll -- flashplayer11_1r102_62_win_sa_32bit.exe %s' % (self.sulo_path, self.file_path)
+        # solu_cmd = '%s\pin -t sulo.dll -- flashplayer10_3r181_23_win_sa.exe %s' % (self.sulo_path, file_path)
+        solu_cmd = '%s\pin -t sulo.dll -- flashplayer11_1r102_62_win_sa_32bit.exe %s' % (self.sulo_path, file_path)
         proc = subprocess.Popen(solu_cmd)
         t = threading.Timer(30, self.kill_process, [proc])
         t.start()
@@ -64,7 +59,7 @@ class FlashUnpackHelper:
                 print curr_time(), 'dump timeout,give up dumping'
                 return []
         embedded_list = []
-        file_path_without_ext, ext = os.path.splitext(self.file_path)
+        file_path_without_ext, ext = os.path.splitext(file_path)
         prefix_path, file_name = os.path.split(file_path_without_ext)
         embedded_count = 0
         for f in os.listdir(self.des_path):
@@ -107,8 +102,7 @@ def main():
         print 'target file not exists'
         exit(0)
     helper = FlashUnpackHelper()
-    helper.set_file_path(sys.argv[1])
-    helper.dump_flash()
+    helper.dump_flash(sys.argv[1])
 
 
 if __name__ == '__main__':

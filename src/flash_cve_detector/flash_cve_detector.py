@@ -35,15 +35,13 @@ class FlashDetector:
         self.root_path = sys.path[0]
         self.dumpTimeout = False
         self.conf = {}
-        self.target_path = ''
         self.project_dir = get_parent_path(self.root_path, 2)
         self.unpack_path = os.path.join(self.project_dir, 'wrappers', 'flash_unpack_wrapper')
         self.unpack_ = FlashUnpackHelper()
         self.decomplie_ = FfdecHelper()
         self.load_conf()
 
-    def work(self):
-        target_path = self.target_path
+    def work(self, target_path):
         self.check_env(target_path)
         self.clean_env()
         if os.path.isfile(target_path):
@@ -51,9 +49,6 @@ class FlashDetector:
         elif os.path.isdir(target_path):
             self.analyze_dir(target_path)
         self.printSum()
-
-    def set_target_path(self, target_path):
-        self.target_path = target_path
 
     def load_conf(self):
         # load conf.ini
@@ -83,10 +78,8 @@ class FlashDetector:
             os.remove('runtime.log')
         # clean up result folder
         if os.path.exists('result'):
-            for f in os.listdir('result'):
-                shutil.rmtree(os.path.join('result', f))
-        else:
-            os.mkdir('result')
+            shutil.rmtree('result')
+        os.mkdir('result')
 
     def analyze_dir(self, folder_path):
         for f in os.listdir(folder_path):
@@ -110,9 +103,8 @@ class FlashDetector:
             os.rename(file_path, file_path + ".swf")
             file_path += ".swf"
         # dump embedded flash
-        self.unpack_.set_file_path(file_path)
         self.unpack_.set_des_path(self.root_path)
-        embedded_list = self.unpack_.dump_flash()
+        embedded_list = self.unpack_.dump_flash(file_path)
         if len(embedded_list):
             embedded_list.insert(0, file_path)
             self.analyze_internal(Sample(file_path, True, embedded_list=embedded_list))
@@ -147,14 +139,12 @@ class FlashDetector:
             for f in sample.embedded_list:
                 print curr_time(), 'Now decomplie embedded flash %s: [%s]' % (count, f)
                 count_folder = os.path.join(result_folder, str(count))
-                self.decomplie_.set_file_path(f)
                 self.decomplie_.set_result_path(count_folder)
-                self.decomplie_.decomplie()
+                self.decomplie_.decomplie(f)
                 count += 1
         else:
-            self.decomplie_.set_file_path(sample.file_path)
             self.decomplie_.set_result_path(result_folder)
-            self.decomplie_.decomplie()
+            self.decomplie_.decomplie(sample.file_path)
         sample.as3 = True
 
     def merge_as(self, sample):
@@ -271,8 +261,7 @@ def main():
 
     os.chdir(sys.path[0])
     detector = FlashDetector()
-    detector.set_target_path(options.TargetPath)
-    detector.work()
+    detector.work(options.TargetPath)
 
 
 if __name__ == '__main__':
