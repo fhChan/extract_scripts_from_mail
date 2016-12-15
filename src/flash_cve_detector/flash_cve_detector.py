@@ -1,16 +1,18 @@
 # auther = Cheng Chang(SA)
 # Date = 2016/11/28
 # usage is in README.md
+import ConfigParser
+import argparse
 import os
+import re
+import shutil
 import sys
 import time
-import re
-import argparse
-import ConfigParser
-import shutil
+
 import yara
-from unpack_helper import FlashUnpackHelper
-from decomplie_helper import FfdecHelper
+
+from third_party.wrappers.flash_decompile_wrapper.decomplie_helper import FfdecHelper
+from third_party.wrappers.flash_unpack_wrapper.unpack_helper import FlashUnpackHelper
 
 
 def curr_time():
