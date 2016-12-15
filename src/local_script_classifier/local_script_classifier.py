@@ -1,99 +1,61 @@
  # Author: Feihao Chen
- # Date: 2016/12/14
+ # Date: 2016/12/15
 
-import os,sys,re
+import os,sys
 import csv
 import subprocess
-from behaviour_report_helper import BehaviourReport
+from behaviour_report_helper import BehaviourReportHelper
 
 class xml_analyser(object):
     """
 
     """
     def __init__(self):
-        self.BR = None
-
+        self.BRH = BehaviourReportHelper()
+        self.fieldnames = ['name','is_local','decision','rules','/*@cc_on','wscript.shell','shell.application','scripting.filesystemobject',\
+'window.xxx','document.xxx','xmlhttp','adodb.stream','getElementsByTagName','getElementById','<div','console','parentNode',\
+'window[xxx]','document[xxx]','$.']
         csvfile=file('report.csv','wb')
         writer=csv.writer(csvfile)
-        writer.writerow(['name','is_local','decision','rules','/*@cc_on','wscript.shell','shell.application','scripting.filesystemobject',\
-'window.xxx','document.xxx','xmlhttp','adodb.stream','getElementsByTagName','getElementById','<div','console','parentNode',\
-'window[xxx]','document[xxx]','$.'])
+        writer.writerow(self.fieldnames)
         csvfile.close()
 
-    def behaviour_reader(self):
-        return self.BR.behaviour_reader
-
-    def find_feature(self,feature):
-        s=self.behaviour_reader()
-        return 1 if re.search(feature,s)!=None else 0
-
-    def match_feature(self,feature):
-        s=self.behaviour_reader()
-        return ';'.join(set(re.findall(feature,s)))
-
     def is_local_script(self):
-        flag=0
-        flag+=self.find_feature(r'/*@cc_on')
-        flag+=self.find_feature('wscript.shell')
-        flag+=self.find_feature('shell.application')
-        flag+=self.find_feature('scripting.filesystemobject')
-        if flag>0:
-            if 'w' in self.match_feature('\\bwindow\.[a-z0-9]+') and self.match_feature('\\bwindow\.[a-z0-9]+')!='window.eval':
-                return False
-            elif 'd' in self.match_feature('\\bdocument\.[a-z0-9]+'):
-                return False
-            elif self.find_feature('getElementsByTagName'):
-                return False
-            elif self.find_feature('getElementById'):
-                return False
-            elif self.find_feature('<div'):
-                return False
-            elif self.find_feature('\\bconsole\.'):
-                return False
-            elif self.find_feature('parentNode'):
-                return False
-            elif 'w' in self.match_feature('\\bwindow\[[a-z0-9]+\]') and self.match_feature('\\bwindow\[[a-z0-9]+\]')!='window[eval]':
-                return False
-            elif 'd' in self.match_feature('\\bdocument\[[a-z0-9]+\]'):
-                return False
-            elif self.find_feature('\s\$\.'):
-                return False
-            else:
-                return True
-        else:
-            return False
+        return self.BRH.get_is_local()
 
     def report_append(self,xml_file):
-        self.BR = BehaviourReport(xml_file)
+        self.BRH.set_xml_file(xml_file)
+        self.BRH.parse_XML()
         csvfile=file('report.csv','ab')
         writer=csv.writer(csvfile)
         writer.writerow([\
-self.BR.filename,\
-'T' if self.is_local_script() else 'F',\
-self.BR.sa_decison,\
-self.BR.rules,\
-str(self.find_feature(r'/*@cc_on')),\
-str(self.find_feature('wscript.shell')),\
-str(self.find_feature('shell.application')),\
-str(self.find_feature('scripting.filesystemobject')),\
-self.match_feature('\\bwindow\.[a-z0-9]+'),\
-self.match_feature('\\bdocument\.[a-z0-9]+'),\
-str(self.find_feature('xmlhttp')),\
-str(self.find_feature('adodb.stream')),\
-str(self.find_feature('getElementsByTagName')),\
-str(self.find_feature('getElementById')),\
-str(self.find_feature('<div')),\
-str(self.find_feature('\\bconsole\.')),\
-str(self.find_feature('parentNode')),\
-self.match_feature('\\bwindow\[[a-z0-9]+\]'),\
-self.match_feature('\\bdocument\[[a-z0-9]+\]'),\
-str(self.find_feature('\s\$\.'))])
+self.BRH.get_file_path(),
+self.BRH.get_is_local(),
+self.BRH.get_decision(),
+self.BRH.get_rules(),
+self.BRH.get_feature_dict()[r'/*@cc_on'],
+self.BRH.get_feature_dict()['wscript.shell'],
+self.BRH.get_feature_dict()['shell.application'],
+self.BRH.get_feature_dict()['scripting.filesystemobject'],
+self.BRH.get_feature_dict()['\\bwindow\.[a-z0-9]+'],
+self.BRH.get_feature_dict()['\\bdocument\.[a-z0-9]+'],
+self.BRH.get_feature_dict()['xmlhttp'],
+self.BRH.get_feature_dict()['adodb.stream'],
+self.BRH.get_feature_dict()['getElementsByTagName'],
+self.BRH.get_feature_dict()['getElementById'],
+self.BRH.get_feature_dict()['<div'],
+self.BRH.get_feature_dict()['\\bconsole\.'],
+self.BRH.get_feature_dict()['parentNode'],
+self.BRH.get_feature_dict()['\\bwindow\[[a-z0-9]+\]'],
+self.BRH.get_feature_dict()['\\bdocument\[[a-z0-9]+\]'],
+self.BRH.get_feature_dict()['\s\$\.']])
         csvfile.close()
+        self.BRH.clear()
 
 def print_usage():
     print """
 Usage:
-    python local_script_classifier.py sample\samplefolder
+    python local_script.py XML_folder
     """
 
 def print_single_result(result_dir):
@@ -105,7 +67,7 @@ def print_single_result(result_dir):
         mtime = os.path.getmtime(behavior_path)
         if (mtime > last_modified_date):
             last_modified_date, last_behavior = mtime, behavior_path
-    XA.BR = BehaviourReport(last_behavior)
+    XA.BRH = BehaviourReportHelper(last_behavior)
     if XA.is_local_script():
         print '\nIt\'s local script!'
     else:
@@ -116,11 +78,11 @@ def process_multi_xml(result_dir):
     XA = xml_analyser()
     for f in os.listdir(result_dir):
         filepath = os.path.join(result_dir, f)
-        try:
-            if 'xml' in os.path.splitext(f)[1]:
-                XA.report_append(filepath)
-        except:
-            print 'processing error: ' + f
+        # try:
+        if 'xml' in os.path.splitext(f)[1]:
+            XA.report_append(filepath)
+        # except:
+        #     print 'processing error: ' + f
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -134,6 +96,6 @@ if __name__ == '__main__':
 
     result_dir = os.path.join('salineup_for_script_malware','result')
     if os.path.isfile(target_path):
-        process_single_xml(result_dir)
+        print_single_result(result_dir)
     else:
         process_multi_xml(result_dir)
