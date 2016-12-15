@@ -8,9 +8,8 @@ import re
 import shutil
 import sys
 import time
-
 import yara
-
+sys.path.append("..\..")
 from third_party.wrappers.flash_decompile_wrapper.decomplie_helper import FfdecHelper
 from third_party.wrappers.flash_unpack_wrapper.unpack_helper import FlashUnpackHelper
 
@@ -18,6 +17,12 @@ from third_party.wrappers.flash_unpack_wrapper.unpack_helper import FlashUnpackH
 def curr_time():
     return time.strftime("%H:%M:%S")
 
+def get_parent_path(path, grade):
+    if grade > 0 and path.count('\\') <= grade:
+        l = path.split('\\')
+        return '\\'.join(l[:0-grade])
+    else:
+        return path
 
 class FlashDetector:
     def __init__(self):
@@ -31,6 +36,8 @@ class FlashDetector:
         self.dumpTimeout = False
         self.conf = {}
         self.target_path = ''
+        self.project_dir = get_parent_path(self.root_path, 2)
+        self.unpack_path = os.path.join(self.project_dir, 'wrappers', 'flash_unpack_wrapper')
         self.unpack_ = FlashUnpackHelper()
         self.decomplie_ = FfdecHelper()
         self.load_conf()
@@ -66,29 +73,14 @@ class FlashDetector:
         else:
             print '[ERROR] the entered path not exists!please enter abs path'
             exit(0)
-        # check sulo
-        if not os.path.exists('sulo'):
-            print '[ERROR] sulo not exists in current dir!'
-            exit(0)
-        # check ffdec
-        if not os.path.exists('ffdec'):
-            print '[ERROR] ffdec not exists in current dir!'
-            exit(0)
         # check yara file
         if not os.path.exists('rules.yar'):
             print '[ERROR] yara file not exists!'
             exit(0)
 
-    def clean_env(self):    # clean log file(and the past result)
+    def clean_env(self):
         if os.path.exists('runtime.log'):
             os.remove('runtime.log')
-        # clean up dump file
-        for f in os.listdir(self.root_path):
-            if re.search('.*_\d$', f):
-                os.remove(f)
-                continue
-            if f.startswith('dumped_flash_'):
-                os.remove(f)
         # clean up result folder
         if os.path.exists('result'):
             for f in os.listdir('result'):
@@ -119,8 +111,8 @@ class FlashDetector:
             file_path += ".swf"
         # dump embedded flash
         self.unpack_.set_file_path(file_path)
+        self.unpack_.set_des_path(self.root_path)
         embedded_list = self.unpack_.dump_flash()
-
         if len(embedded_list):
             embedded_list.insert(0, file_path)
             self.analyze_internal(Sample(file_path, True, embedded_list=embedded_list))

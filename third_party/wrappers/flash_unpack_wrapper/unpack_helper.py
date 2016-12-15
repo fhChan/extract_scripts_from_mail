@@ -15,40 +15,48 @@ class FlashUnpackHelper:
     def __init__(self):
         self.dumpTimeout = False
         self.file_path = ''
+        self.path = os.path.split(os.path.realpath(__file__))[0]
+        self.sulo_path = os.path.join(self.path, 'sulo')
         self.root_path = sys.path[0]
+        self.des_path = self.path
         self.check_env()
         self.clean_env()
 
     def set_file_path(self, file_path):
         self.file_path = file_path
 
+    def set_des_path(self, des_path):
+        self.des_path = des_path
+
     def check_env(self):
         # check sulo
-        if not os.path.exists('sulo'):
+        if not os.path.exists(self.sulo_path):
             print '[ERROR] sulo not exists in current dir!'
             exit(0)
 
     def clean_env(self):
         # clean up dump file
-        for f in os.listdir(self.root_path):
+        for f in os.listdir(self.des_path):
             if re.search('.*_\d$', f):
-                os.remove(f)
+                file_name = os.path.join(self.des_path, f)
+                os.remove(file_name)
                 continue
             if f.startswith('dumped_flash_'):
-                os.remove(f)
+                file_name = os.path.join(self.des_path, f)
+                os.remove(file_name)               
 
     def dump_flash(self):
         self.dumpTimeout = False
         # f0fad08da4212cc398160c38d2ba1f8a1930cfd1  10->dump,11->no dump
-        # solu_cmd = 'sulo\pin -t sulo.dll -- flashplayer10_3r181_23_win_sa.exe '+file_path
-        solu_cmd = 'sulo\pin -t sulo.dll -- flashplayer11_1r102_62_win_sa_32bit.exe ' + self.file_path
+        # solu_cmd = '%s\pin -t sulo.dll -- flashplayer10_3r181_23_win_sa.exe %s' % (self.sulo_path, self.file_path)
+        solu_cmd = '%s\pin -t sulo.dll -- flashplayer11_1r102_62_win_sa_32bit.exe %s' % (self.sulo_path, self.file_path)
         proc = subprocess.Popen(solu_cmd)
         t = threading.Timer(30, self.kill_process, [proc])
         t.start()
         t.join()
         if self.dumpTimeout is True:
             DumpFlag = False
-            for f in os.listdir(sys.path[0]):
+            for f in os.listdir(self.des_path):
                 if f.startswith('dumped_flash'):
                     DumpFlag = True
                     break
@@ -59,11 +67,13 @@ class FlashUnpackHelper:
         file_path_without_ext, ext = os.path.splitext(self.file_path)
         prefix_path, file_name = os.path.split(file_path_without_ext)
         embedded_count = 0
-        for f in os.listdir(self.root_path):
+        for f in os.listdir(self.des_path):
             if f.startswith('dumped_flash'):
                 new_name = file_name + '_%s' % embedded_count  # xxx_0
-                os.rename(f, new_name)
-                embedded_list.append(os.path.join(self.root_path, new_name))
+                file_path = os.path.join(self.des_path, f)
+                new_file_path = os.path.join(self.des_path, new_name)
+                os.rename(file_path, new_file_path)
+                embedded_list.append(os.path.join(self.des_path, new_name))
                 embedded_count += 1
         if embedded_count == 0:
             print curr_time(), 'no need to dump'

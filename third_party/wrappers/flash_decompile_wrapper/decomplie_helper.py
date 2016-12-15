@@ -7,11 +7,13 @@ class FfdecHelper:
     def __init__(self):
         self.file_path = ''
         self.result_path = ''
+        self.path = os.path.split(os.path.realpath(__file__))[0]
+        self.ffdec_path = os.path.join(self.path, 'ffdec')
         self.check_env()
         self.clean_env()
 
     def check_env(self):
-        if not os.path.exists('ffdec'):
+        if not os.path.exists(self.ffdec_path):
             print '[ERROR] ffdec not exists in current dir!'
             exit(0)
 
@@ -29,7 +31,7 @@ class FfdecHelper:
 
     def decomplie(self):
         if self.file_path != '' and self.result_path != '':
-            ffdec_cmd = "\"ffdec\%s\" -export script \"%s\" \"%s\"" % ('ffdec.bat', self.result_path, self.file_path)
+            ffdec_cmd = "\"%s\%s\" -export script \"%s\" \"%s\"" % (self.ffdec_path, 'ffdec.bat', self.result_path, self.file_path)
             proc = subprocess.Popen(ffdec_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             proc.communicate()
 

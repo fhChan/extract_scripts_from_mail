@@ -92,3 +92,6 @@ function isarray(object){
 function array(object){
     
 }
+function createobject(str){
+    return new ActiveXObject(str)
+}

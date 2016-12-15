@@ -180,7 +180,7 @@ EXIT SUB --> return\n
 MID\(([^,]*),([^,]*)\) -->\1.substr(\2 - 1)
 
 //CreateObject
-CREATEOBJECT --> new ActiveXObject
+//CREATEOBJECT --> new ActiveXObject
 
 //operators
 \bAND\b --> &&
