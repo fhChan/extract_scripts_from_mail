@@ -6,7 +6,8 @@ import re
 import subprocess
 import extract_from_mail
 from unzip_classify import unzip
-from oletools.olevba import VBA_Parser
+sys.path.append("..\..")
+from third_party.tools.oletools.olevba import VBA_Parser
 
 def eml_process(input_dir,output_dir):
     if not os.path.exists(os.path.join(output_dir,'logs')):
@@ -65,6 +66,13 @@ def extract_macros(input_folder): # ./office
                 print filename
                 print e
 
+def get_parent_path(path, grade):
+    if grade > 0 and path.count('\\') >= grade:
+        l = path.split('\\')
+        return '\\'.join(l[:0-grade])
+    else:
+        return path
+
 def print_usage():
     print """
 Usage:
@@ -106,14 +114,18 @@ def main():
     extract_macros(os.path.join(output_dir,'office'))
 
     # analyse js and wsf files
+    curr_path = os.path.split(os.path.realpath(__file__))[0]
+    project_dir = get_parent_path(curr_path, 2)
+    sal_path_ = os.path.join(project_dir, 'third_party', 'wrappers', 'salineup_wrapper','salineup')
+    sal = os.path.join(sal_path_, 'SALineup.exe')
     print "\nNow Processing JS Files :"
     with open(os.path.join(output_dir,'logs','js-log.log'), 'w') as sys.stdout:
-        subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc --script-malware=true --loglevel=all \"'+\
+        subprocess.check_call(sal + ' --productname=sc --script-malware=true --loglevel=all \"'+\
             os.path.join(output_dir,'js') + '\"', stdout=sys.stdout)
     sys.stdout = __console__
     print "\nNow Processing WSF Files :"
     with open(os.path.join(output_dir,'logs','wsf-log.log'), 'w') as sys.stdout:
-        subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc --script-malware=true --loglevel=all \"'+\
+        subprocess.check_call(sal + ' --productname=sc --script-malware=true --loglevel=all \"'+\
             os.path.join(output_dir,'wsf') + '\"', stdout=sys.stdout)
     sys.stdout = __console__
 

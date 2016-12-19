@@ -2,7 +2,7 @@ import extractor
 import numpy
 import os
 import xgboost as xgb
-model1 = os.path.abspath(os.path.join(os.path.dirname(__file__), 'M=xgbtree2=home-data-js-js-feature2-basic_str_unigram_token_unigram_struct_hash256_struct_unigram_cc_on_checkjs2=basic_str_unigram_token_unigram_struct_hash256_struct_unigram_cc_on_checkjs2=23310838.xgboost_model'))
+model1 = os.path.abspath(os.path.join(os.path.dirname(__file__), 'trendx.xgboost_model'))
 
 class JSModel:
 
