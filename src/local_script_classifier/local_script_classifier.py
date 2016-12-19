@@ -6,6 +6,13 @@ import csv
 import subprocess
 from behaviour_report_helper import BehaviourReportHelper
 
+def get_parent_path(path, grade):
+    if grade > 0 and path.count('\\') >= grade:
+        l = path.split('\\')
+        return '\\'.join(l[:0-grade])
+    else:
+        return path
+
 class xml_analyser(object):
     """
 
@@ -90,11 +97,15 @@ if __name__ == '__main__':
         exit(-1)
 
     target_path = sys.argv[1]
-    with open('SAL.log', 'w') as fout:
-        subprocess.check_call('salineup_for_script_malware\SALineup.exe --productname=sc \
-        --script-malware=true --loglevel=all \"' + target_path, stdout=fout)
+    curr_path = os.path.split(os.path.realpath(__file__))[0]
+    project_dir = get_parent_path(curr_path, 2)
+    sal_path_ = os.path.join(project_dir, 'third_party', 'wrappers', 'salineup_wrapper','salineup')
+    sal_log = os.path.join(sal_path_, 'SAL.log')
+    sal = os.path.join(sal_path_, 'SALineup.exe')
+    with open(sal_log, 'w') as fout:
+        subprocess.check_call(sal + ' --productname=sc --script-malware=true --loglevel=all \"' + target_path, stdout=fout)
 
-    result_dir = os.path.join('salineup_for_script_malware','result')
+    result_dir = os.path.join(sal_path_,'result')
     if os.path.isfile(target_path):
         print_single_result(result_dir)
     else:
