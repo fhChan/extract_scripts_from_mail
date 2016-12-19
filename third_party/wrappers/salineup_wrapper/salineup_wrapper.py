@@ -6,16 +6,17 @@ from saz_extractor import SazExtractor
 class SALineupWrapper:
     """
     """
-
     def __init__(self):
         self.output_ = ""
         self.de_ = None
+        self.path_ = os.path.split(os.path.realpath(__file__))[0]
+        self.sal_path_ = os.path.join(self.path_, "salineup", "SALineup.exe")
         self.detection_list_for_saz_ = []
         self.de_file_ = open("de_file.cvs", "w")
         self.de_file_.write("file_path,decision,rules\n")
 
     def check_env(self):
-        if not os.path.exists("SALineup.exe"):
+        if not os.path.exists(self.sal_path_):
             print "[ERROR] cannot find SALineup.exe in current directory"
             return False
         return True
@@ -25,7 +26,7 @@ class SALineupWrapper:
 
     def scan_file_internal(self, arg_options, file_path):
         self.output_ = ""
-        cmd = "SALineup.exe " + arg_options + " " + file_path
+        cmd = '\"' + self.sal_path_ +'\" ' + arg_options + ' \"' + file_path + '\"'
         print "[*] CMD: " + cmd
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         self.output_ = proc.stdout.readlines()
@@ -112,6 +113,3 @@ if __name__ == "__main__":
         sal.scan_file(opt_args, sys.argv[-1])
     elif os.path.isdir(sys.argv[-1]):
         sal.scan_dir(opt_args, sys.argv[-1])
-    else:
-        pass
-

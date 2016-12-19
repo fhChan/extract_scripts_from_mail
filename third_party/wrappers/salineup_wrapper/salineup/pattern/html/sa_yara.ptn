@@ -8,6 +8,7 @@
   <import type="http_header" path="pattern/html/http_header.yar" />
 </yara>
 
+
 <rule name="JSRansom.DBG.ExpandEnvTemp.CharCodeAt" confidence='monitor' fbtype='page' fbrate='1.0'>
   <match>JSB_EXPANDENV_TEMP_CHARCODEAT</match>
 </rule>

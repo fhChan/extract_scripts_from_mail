@@ -137,6 +137,7 @@ condition:
 rule JSB_FILESYSTEM_FILE_OP {
 meta:
   description = "Rule for JS Ransomware, which will use FileSystem to save file"
+//  SHA1 = ""
   author = "michael_du"
   date = "2016-12-14"
 strings:
@@ -169,6 +170,7 @@ condition:
 rule JSB_HTTP_DOWNLOAD_EXEC {
 meta:
   description = "Rule for JS Ransomware, which includes following behaviors: 1. send HTTP request to download, but no behavior to save to file; 2. call WScript.Shell to run this file"
+//  SHA1 = ""
   author = "michael_du"
   date = "2016-12-14"
 condition:

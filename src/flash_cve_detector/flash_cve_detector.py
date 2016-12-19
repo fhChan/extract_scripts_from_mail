@@ -18,7 +18,7 @@ def curr_time():
     return time.strftime("%H:%M:%S")
 
 def get_parent_path(path, grade):
-    if grade > 0 and path.count('\\') <= grade:
+    if grade > 0 and path.count('\\') >= grade:
         l = path.split('\\')
         return '\\'.join(l[:0-grade])
     else:

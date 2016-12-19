@@ -7,16 +7,17 @@ from api_replace import APIConverter
 class VBSConverter:
     """
     """
-    def __init__(self, vbs_file, function_list_file, conversion_rules_path, js_file):
+    def __init__(self, vbs_file, js_file, function_list_file='known_function_names.cfg', conversion_rules_path='vba_to_js.rules'):
         self.vbs_file_ = vbs_file
-        self.external_fun_list_file_ = function_list_file
-        self.conversion_rules_path_ = conversion_rules_path
+        self.path = os.path.split(os.path.realpath(__file__))[0]
+        self.external_fun_list_file_ = os.path.join(self.path, function_list_file)
+        self.conversion_rules_path_ = os.path.join(self.path, conversion_rules_path)
+        self.runtime_for_vbs_api = os.path.join(self.path,'runtime_for_win_host_vbs.js')
         self.conversion_rules_ = []
         self.array_name_list_ = []
         self.function_name_list_ = []
         self.external_fun_list_ = []
         self.js_file_ = js_file
-        self.runtime_for_vbs_api = 'runtime_for_win_host_vbs.js'
         self.re_module_name_ = re.compile(r'VBA MACRO (\w*?)\.', re.IGNORECASE | re.MULTILINE)
 
     def load_conversion_rules(self):
@@ -325,29 +326,24 @@ def beautify_vbs(file):
 def print_help():
     print """
 Usage:
-    python vbs2js.py input_vbs_file function_list_file input_conversion_rules_file output_js_file
+    python vbs2js.py input_vbs function_list_file input_conversion_rules_file 
     """
 
 
 if __name__ == '__main__':
-    # use for CC debug
-    if len(sys.argv) == 2:
-        if os.path.isfile(sys.argv[1]):
-            beautify_vbs(sys.argv[1])
-            js_name = os.path.join(r'C:\Users\Administrator\Desktop\local_js_runtime', 'test.js')
-            converter = VBSConverter(sys.argv[1], 'known_function_names.cfg', 'vba_to_js.rules', js_name)
-            converter.convert()
-        else:
-            path = r'C:\Users\Administrator\Desktop\js'
-            for vbs in os.listdir(sys.argv[1]):
-                if vbs.endswith(r'.vbs'):
-                    print vbs
-                    file_path_without_ext = os.path.splitext(vbs)[0]
-                    converter = VBSConverter(os.path.join(sys.argv[1], vbs), 'known_function_names.cfg', 'vba_to_js.rules', os.path.join(path, file_path_without_ext + '.js'))
-                    converter.convert()
-        exit(0)
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 2 and len(sys.argv) != 4:
         print_help()
         exit(-1)
-    converter = VBSConverter(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-    converter.convert()
+    target_path = sys.argv[1]
+    if os.path.isfile(target_path):
+        file_name = os.path.split(target_path)[1]
+        js_path = os.path.join(sys.path[0], file_name + '.js')
+        converter = VBSConverter(target_path, js_path, sys.argv[2], sys.argv[3])
+        converter.convert()        
+    elif os.path.isdir(target_path):
+        for vbs in os.listdir(target_path):
+            if vbs.endswith(r'.vbs'):
+                vbs_file = os.path.join(target_path, vbs)
+                js_path = os.path.join(sys.path[0], vbs + '.js')
+                converter = VBSConverter(vbs_file, js_path, sys.argv[2], sys.argv[3])
+                converter.convert()
