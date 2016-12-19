@@ -6,7 +6,8 @@ import re
 import subprocess
 import extract_from_mail
 from unzip_classify import unzip
-from oletools.olevba import VBA_Parser
+sys.path.append("..\..")
+from third_party.tools.oletools.olevba import VBA_Parser
 
 def eml_process(input_dir,output_dir):
     if not os.path.exists(os.path.join(output_dir,'logs')):
