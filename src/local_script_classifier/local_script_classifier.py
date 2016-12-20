@@ -108,7 +108,8 @@ def process_single_script(target_path):
     salineup.scan_file('--productname=sc --script-malware=true --loglevel=debug ',target_path)
     
     XA = xml_analyser()
-    result_dir = os.path.join('third_party','wrappers','salineup_wrapper','salineup','result')
+    cur_path = get_parent_path(sys.path[0],2)
+    result_dir = os.path.join(cur_path,'third_party','wrappers','salineup_wrapper','salineup','result')
 
     last_modified_date = 0
     last_behavior = ''
@@ -125,24 +126,21 @@ def process_single_script(target_path):
 
 # form a csv file to show the features
 def process_script_dir(target_path):
-    __console__= sys.stdout
     salineup = SA.SALineupWrapper()
-    with open('SAL.log', 'w') as sys.stdout:
-        salineup.scan_file('--productname=sc --script-malware=true --loglevel=debug ',target_path)
+    salineup.scan_file('--productname=sc --script-malware=true --loglevel=debug ',target_path)
     
-    sys.stdout = __console__
     XA = xml_analyser()
     cur_path = get_parent_path(sys.path[0],2)
     result_dir = os.path.join(cur_path,'third_party','wrappers','salineup_wrapper','salineup','result')
 
     for f in os.listdir(result_dir):
         filepath = os.path.join(result_dir, f)
-        # try:
-        if 'xml' in os.path.splitext(f)[1]:
-            XA.load_xml_file(filepath)
-            XA.report_append()
-        # except:
-        #     print 'processing error: ' + f
+        try:
+            if 'xml' in os.path.splitext(f)[1]:
+                XA.load_xml_file(filepath)
+                XA.report_append()
+        except:
+            print 'processing error: ' + f
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
