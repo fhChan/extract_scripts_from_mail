@@ -87,6 +87,9 @@ Usage:
     """
 
 def main():
+    if len(sys.argv) != 2:
+        print_help()
+        exit(0)    
     salWrapper = SALineupWrapper()
     vbsChecker = VBSChecker(salWrapper)
     if not vbsChecker.check_env():
