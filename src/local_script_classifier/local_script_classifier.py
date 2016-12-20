@@ -4,7 +4,9 @@
 import os,sys
 import csv
 import subprocess
-from behaviour_report_helper import BehaviourReportHelper
+sys.path.append("..\..")
+import utility.behaviour_report_helper as BR
+import third_party.wrappers.salineup_wrapper.salineup_wrapper as SA
 
 def get_parent_path(path, grade):
     if grade > 0 and path.count('\\') >= grade:
@@ -18,7 +20,7 @@ class xml_analyser(object):
 
     """
     def __init__(self):
-        self.BRH = BehaviourReportHelper()
+        self.EBF = BR.ExtractBehaviourFeature()
         self.fieldnames = ['name','is_local','decision','rules','/*@cc_on','wscript.shell','shell.application','scripting.filesystemobject',\
 'window.xxx','document.xxx','xmlhttp','adodb.stream','getElementsByTagName','getElementById','<div','console','parentNode',\
 'window[xxx]','document[xxx]','$.']
@@ -27,46 +29,91 @@ class xml_analyser(object):
         writer.writerow(self.fieldnames)
         csvfile.close()
 
-    def is_local_script(self):
-        return self.BRH.get_is_local()
+    def load_xml_file(self, xml_file):
+        self.EBF.clear()
+        self.EBF.set_xml_file(xml_file)
+        self.EBF.load_behaviour()
+        
+        self.EBF.append_local_script_feature()
+        self.EBF.append_browser_script_feature()
+        self.EBF.append_other_features()
 
-    def report_append(self,xml_file):
-        self.BRH.set_xml_file(xml_file)
-        self.BRH.parse_XML()
+    def check_local_script_feature(self):
+        flag=0
+        flag+=self.EBF.get_feature_dict()[r'/*@cc_on']
+        flag+=self.EBF.get_feature_dict()['wscript.shell']
+        flag+=self.EBF.get_feature_dict()['shell.application']
+        flag+=self.EBF.get_feature_dict()['scripting.filesystemobject']
+        return True if flag>0 else False
+
+    def check_browser_script_feature(self):
+        flag=0
+        if self.EBF.get_feature_dict()['\\bwindow\.[a-z0-9]+'] and self.EBF.get_feature_dict()['\\bwindow\.[a-z0-9]+']!='window.eval':
+            flag+=1
+        if self.EBF.get_feature_dict()['\\bdocument\.[a-z0-9]+']:
+            flag+=1
+        if self.EBF.get_feature_dict()['\\bwindow\[[a-z0-9]+\]'] and self.EBF.get_feature_dict()['\\bwindow\[[a-z0-9]+\]']!='window[eval]':
+            flag+=1
+        if self.EBF.get_feature_dict()['\\bdocument\[[a-z0-9]+\]']:
+            flag+=1
+        flag+=self.EBF.get_feature_dict()['getElementsByTagName']
+        flag+=self.EBF.get_feature_dict()['getElementById']
+        flag+=self.EBF.get_feature_dict()['<div']
+        flag+=self.EBF.get_feature_dict()['\\bconsole\.']
+        flag+=self.EBF.get_feature_dict()['parentNode']
+        flag+=self.EBF.get_feature_dict()['\s\$\.']
+        return True if flag>0 else False
+
+    def is_local_script(self):
+        if self.check_local_script_feature() and not self.check_browser_script_feature():
+            return True
+        else:
+            return False
+
+    def report_append(self):
         csvfile=file('report.csv','ab')
         writer=csv.writer(csvfile)
         writer.writerow([\
-self.BRH.get_file_path(),
-self.BRH.get_is_local(),
-self.BRH.get_decision(),
-self.BRH.get_rules(),
-self.BRH.get_feature_dict()[r'/*@cc_on'],
-self.BRH.get_feature_dict()['wscript.shell'],
-self.BRH.get_feature_dict()['shell.application'],
-self.BRH.get_feature_dict()['scripting.filesystemobject'],
-self.BRH.get_feature_dict()['\\bwindow\.[a-z0-9]+'],
-self.BRH.get_feature_dict()['\\bdocument\.[a-z0-9]+'],
-self.BRH.get_feature_dict()['xmlhttp'],
-self.BRH.get_feature_dict()['adodb.stream'],
-self.BRH.get_feature_dict()['getElementsByTagName'],
-self.BRH.get_feature_dict()['getElementById'],
-self.BRH.get_feature_dict()['<div'],
-self.BRH.get_feature_dict()['\\bconsole\.'],
-self.BRH.get_feature_dict()['parentNode'],
-self.BRH.get_feature_dict()['\\bwindow\[[a-z0-9]+\]'],
-self.BRH.get_feature_dict()['\\bdocument\[[a-z0-9]+\]'],
-self.BRH.get_feature_dict()['\s\$\.']])
+self.EBF.get_file_path(),
+self.is_local_script(),
+self.EBF.get_decision(),
+self.EBF.get_rules(),
+self.EBF.get_feature_dict()[r'/*@cc_on'],
+self.EBF.get_feature_dict()['wscript.shell'],
+self.EBF.get_feature_dict()['shell.application'],
+self.EBF.get_feature_dict()['scripting.filesystemobject'],
+self.EBF.get_feature_dict()['\\bwindow\.[a-z0-9]+'],
+self.EBF.get_feature_dict()['\\bdocument\.[a-z0-9]+'],
+self.EBF.get_feature_dict()['xmlhttp'],
+self.EBF.get_feature_dict()['adodb.stream'],
+self.EBF.get_feature_dict()['getElementsByTagName'],
+self.EBF.get_feature_dict()['getElementById'],
+self.EBF.get_feature_dict()['<div'],
+self.EBF.get_feature_dict()['\\bconsole\.'],
+self.EBF.get_feature_dict()['parentNode'],
+self.EBF.get_feature_dict()['\\bwindow\[[a-z0-9]+\]'],
+self.EBF.get_feature_dict()['\\bdocument\[[a-z0-9]+\]'],
+self.EBF.get_feature_dict()['\s\$\.']])
         csvfile.close()
-        self.BRH.clear()
+        self.EBF.clear()
 
 def print_usage():
     print """
 Usage:
-    python local_script.py XML_folder
+    python local_script.py script_path/dir
     """
 
-def print_single_result(result_dir):
+def process_single_script(target_path):
+    salineup = SA.SALineupWrapper()
+    salineup.clear_env()
+        salineup.scan_file_internal('--productname=sc --script-malware=true --loglevel=debug ',target_path)
+        for line in salineup.output_:
+            print line[:-2]
+    
     XA = xml_analyser()
+    cur_path = get_parent_path(sys.path[0],2)
+    result_dir = os.path.join(cur_path,'third_party','wrappers','salineup_wrapper','salineup','result')
+
     last_modified_date = 0
     last_behavior = ''
     for behavior in os.listdir(result_dir):
@@ -74,22 +121,35 @@ def print_single_result(result_dir):
         mtime = os.path.getmtime(behavior_path)
         if (mtime > last_modified_date):
             last_modified_date, last_behavior = mtime, behavior_path
-    XA.BRH = BehaviourReportHelper(last_behavior)
+    XA.EBF.load_xml_file(last_behavior)
     if XA.is_local_script():
         print '\nIt\'s local script!'
     else:
         print '\nIt\'s not local script!'
 
 # form a csv file to show the features
-def process_multi_xml(result_dir):
+def process_script_dir(target_path):
+    __console__= sys.stdout
+    salineup = SA.SALineupWrapper()
+    with open('SAL.log', 'w') as sys.stdout:
+        salineup.clear_env()
+        salineup.scan_file_internal('--productname=sc --script-malware=true --loglevel=debug ',target_path)
+        for line in salineup.output_:
+            print line[:-2]
+    
+    sys.stdout = __console__
     XA = xml_analyser()
+    cur_path = get_parent_path(sys.path[0],2)
+    result_dir = os.path.join(cur_path,'third_party','wrappers','salineup_wrapper','salineup','result')
+
     for f in os.listdir(result_dir):
         filepath = os.path.join(result_dir, f)
-        # try:
-        if 'xml' in os.path.splitext(f)[1]:
-            XA.report_append(filepath)
-        # except:
-        #     print 'processing error: ' + f
+        try:
+            if 'xml' in os.path.splitext(f)[1]:
+                XA.load_xml_file(filepath)
+                XA.report_append()
+        except:
+            print 'processing error: ' + f
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -97,16 +157,8 @@ if __name__ == '__main__':
         exit(-1)
 
     target_path = sys.argv[1]
-    curr_path = os.path.split(os.path.realpath(__file__))[0]
-    project_dir = get_parent_path(curr_path, 2)
-    sal_path_ = os.path.join(project_dir, 'third_party', 'wrappers', 'salineup_wrapper','salineup')
-    sal_log = os.path.join(sal_path_, 'SAL.log')
-    sal = os.path.join(sal_path_, 'SALineup.exe')
-    with open(sal_log, 'w') as fout:
-        subprocess.check_call(sal + ' --productname=sc --script-malware=true --loglevel=all \"' + target_path, stdout=fout)
 
-    result_dir = os.path.join(sal_path_,'result')
     if os.path.isfile(target_path):
-        print_single_result(result_dir)
+        process_single_script(target_path)
     else:
-        process_multi_xml(result_dir)
+        process_script_dir(target_path)
