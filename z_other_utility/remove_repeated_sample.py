@@ -22,28 +22,21 @@ def main(dest_dir):
         for line in file:
             sha1_list.append(line.strip())
 
-    remove_log=[]
-    sha1_to_append=[]
-    COUNT=0
+    log=open('remove.log','w')
+    log.write('')
+    log=open('remove.log','a')
+    file=open(list_file,'ab')
     for root, dirs, files in os.walk(dest_dir):
         for f in files:
-            COUNT+=1
-            print COUNT
             filename=os.path.join(root,f)
             cur_sha1=calc_sha1(filename)
             if cur_sha1 in sha1_list:
-                remove_log.append('REMOVE: ' + str(cur_sha1) +' PATH: ' + os.path.join(root,f))
+                log.write('REMOVE: ' + str(cur_sha1) +' PATH: ' + os.path.join(root,f) + '\n')
                 # os.remove(os.path.join(root,f))
             else:
-                sha1_to_append.append(f)
+            	file.write(cur_sha1+'\n')
+                sha1_list.append(f)
                 os.rename(filename,os.path.join(root,calc_sha1(filename)))
-
-    with open('remove.log','w') as log:
-        for line in remove_log:
-            log.write(line+'\n')
-    with open(list_file,'ab') as file:
-        for sha1 in sha1_to_append:
-            file.write(sha1+'\n')
 
 def print_usage():
     print """
