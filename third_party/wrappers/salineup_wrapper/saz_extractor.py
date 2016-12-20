@@ -278,11 +278,5 @@ if __name__ == "__main__":
     Usage:
       python tool.py --[file|dir] [input_file|input_dir] output_dir
     """
-<<<<<<< HEAD
     sys.exit(1)
-  
-  
-  
-=======
-    sys.exit(1)
->>>>>>> 7594be99b84ebd6a684458b4e86b0f2a6a08590d
+
