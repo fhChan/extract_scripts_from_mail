@@ -105,7 +105,10 @@ Usage:
 
 def process_single_script(target_path):
     salineup = SA.SALineupWrapper()
-    salineup.scan_file('--productname=sc --script-malware=true --loglevel=debug ',target_path)
+    salineup.clear_env()
+        salineup.scan_file_internal('--productname=sc --script-malware=true --loglevel=debug ',target_path)
+        for line in salineup.output_:
+            print line[:-2]
     
     XA = xml_analyser()
     cur_path = get_parent_path(sys.path[0],2)
@@ -126,9 +129,15 @@ def process_single_script(target_path):
 
 # form a csv file to show the features
 def process_script_dir(target_path):
+    __console__= sys.stdout
     salineup = SA.SALineupWrapper()
-    salineup.scan_file('--productname=sc --script-malware=true --loglevel=debug ',target_path)
+    with open('SAL.log', 'w') as sys.stdout:
+        salineup.clear_env()
+        salineup.scan_file_internal('--productname=sc --script-malware=true --loglevel=debug ',target_path)
+        for line in salineup.output_:
+            print line[:-2]
     
+    sys.stdout = __console__
     XA = xml_analyser()
     cur_path = get_parent_path(sys.path[0],2)
     result_dir = os.path.join(cur_path,'third_party','wrappers','salineup_wrapper','salineup','result')
