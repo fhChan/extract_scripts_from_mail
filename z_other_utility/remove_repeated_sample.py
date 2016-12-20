@@ -34,14 +34,16 @@ def main(dest_dir):
                 log.write('REMOVE: ' + str(cur_sha1) +' PATH: ' + os.path.join(root,f) + '\n')
                 # os.remove(os.path.join(root,f))
             else:
-            	file.write(cur_sha1+'\n')
+                file.write(cur_sha1+'\n')
                 sha1_list.append(f)
                 os.rename(filename,os.path.join(root,calc_sha1(filename)))
 
 def print_usage():
     print """
 Usage:
-    python repeated_file.py dest_dir
+    python remove_repeated_sample.py dest_dir
+
+If you already have generated a unique_sha1_list.txt, put it under the current folder.
     """
 
 
