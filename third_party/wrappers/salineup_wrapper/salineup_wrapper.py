@@ -12,8 +12,8 @@ class SALineupWrapper:
         self.path_ = os.path.split(os.path.realpath(__file__))[0]
         self.sal_path_ = os.path.join(self.path_, "salineup", "SALineup.exe")
         self.detection_list_for_saz_ = []
-        self.de_file_ = open("de_file.cvs", "w")
-        self.de_file_.write("file_path,decision,rules\n")
+        # self.de_file_ = open("de_file.cvs", "w")
+        # self.de_file_.write("file_path,decision,rules\n")
 
     def check_env(self):
         if not os.path.exists(self.sal_path_):
@@ -40,8 +40,8 @@ class SALineupWrapper:
             extractor.processFile(file_path, raw_dir_path)
             self.scan_saz_raw_dir(arg_options, raw_dir_path)
             shutil.rmtree(raw_dir_path)
-            self.de_file_.write("%s,%r,%s\n" % (file_path, self.find_malicious_in_de_list(), self.get_malicious_details()))
-            self.de_file_.flush()
+            # self.de_file_.write("%s,%r,%s\n" % (file_path, self.find_malicious_in_de_list(), self.get_malicious_details()))
+            # self.de_file_.flush()
         else:
             self.de_ = None
             self.scan_file_internal(arg_options, file_path)
