@@ -106,9 +106,9 @@ Usage:
 def process_single_script(target_path):
     salineup = SA.SALineupWrapper()
     salineup.clear_env()
-        salineup.scan_file_internal('--productname=sc --script-malware=true --loglevel=debug ',target_path)
-        for line in salineup.output_:
-            print line[:-2]
+    salineup.scan_file_internal('--productname=sc --script-malware=true --loglevel=debug ',target_path)
+    for line in salineup.output_:
+        print line[:-2]
     
     XA = xml_analyser()
     cur_path = get_parent_path(sys.path[0],2)
