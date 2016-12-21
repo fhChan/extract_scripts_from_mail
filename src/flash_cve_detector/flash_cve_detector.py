@@ -32,7 +32,7 @@ class FlashDetector:
         self.as3_count = 0
         self.exception_list = []
         self.matched_rules = {}
-        self.root_path = sys.path[0]
+        self.root_path = os.path.split(os.path.realpath(__file__))[0]
         self.dumpTimeout = False
         self.conf = {}
         self.project_dir = get_parent_path(self.root_path, 2)
@@ -53,8 +53,9 @@ class FlashDetector:
     def load_conf(self):
         # load conf.ini
         cf = ConfigParser.ConfigParser()
-        if os.path.exists('conf.ini'):
-            cf.read('conf.ini')
+        conf_path = os.path.join(self.root_path, 'conf.ini')
+        if os.path.exists(conf_path):
+            cf.read(conf_path)
             for attr in cf.options('base'):
                 self.conf[attr] = cf.get('base', attr)
         else:
@@ -69,17 +70,20 @@ class FlashDetector:
             print '[ERROR] the entered path not exists!please enter abs path'
             exit(0)
         # check yara file
-        if not os.path.exists('rules.yar'):
+        yar_path = os.path.join(self.root_path, 'rules.yar')
+        if not os.path.exists(yar_path):
             print '[ERROR] yara file not exists!'
             exit(0)
 
     def clean_env(self):
-        if os.path.exists('runtime.log'):
-            os.remove('runtime.log')
+        log_path = os.path.join(self.root_path, 'runtime.log')
+        if os.path.exists(log_path):
+            os.remove(log_path)
         # clean up result folder
-        if os.path.exists('result'):
-            shutil.rmtree('result')
-        os.mkdir('result')
+        result_path = os.path.join(self.root_path, 'result')
+        if os.path.exists(result_path):
+            shutil.rmtree(result_path)
+        os.mkdir(result_path)
 
     def analyze_dir(self, folder_path):
         for f in os.listdir(folder_path):
@@ -125,7 +129,8 @@ class FlashDetector:
         self.merge_as(sample)
         # yara
         print curr_time(), 'Now match File : [%s]' % sample.file_path
-        self.yara_match('rules.yar', sample)
+        yar_path = os.path.join(self.root_path, 'rules.yar')
+        self.yara_match(yar_path, sample)
 
         self.collect_info(sample)
 
@@ -247,7 +252,7 @@ class Sample():
         self.malicious = False
         self.as3 = False
         self.exception = False
-        self.result_folder = os.path.join('result', file_name_without_ext)
+        self.result_folder = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'result', file_name_without_ext)
         self.embedded_list = embedded_list
 
 

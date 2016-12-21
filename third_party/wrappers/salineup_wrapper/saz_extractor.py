@@ -279,3 +279,4 @@ if __name__ == "__main__":
       python tool.py --[file|dir] [input_file|input_dir] output_dir
     """
     sys.exit(1)
+
