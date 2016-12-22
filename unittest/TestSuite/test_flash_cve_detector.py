@@ -14,15 +14,17 @@ def get_parent_path(path, grade):
     else:
         return path
 
-class FlashDetectorTestCase(unittest.TestCase):  
+class FlashDetectorTestCase(unittest.TestCase):
     def setUp(self):
         self.detector = FlashDetector()
         self.detect_path_ = self.detector.root_path
         ut_dir = get_parent_path(os.path.split(os.path.realpath(__file__))[0], 1)
-        self.sample_path = os.path.join(ut_dir, 'TestSample', 'vbs')
+        self.sample_path = os.path.join(ut_dir, 'TestSample', 'normal_swf')
 
     def tearDown(self):
         self.detector = None
+        os.remove('calltrace.txt')
+        os.remove('pintool.log')
 
     def testAnalyzeFile(self):
         file_path = os.path.join(self.sample_path, '7_.swf')
