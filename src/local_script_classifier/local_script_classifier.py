@@ -121,7 +121,7 @@ def process_single_script(target_path):
         mtime = os.path.getmtime(behavior_path)
         if (mtime > last_modified_date):
             last_modified_date, last_behavior = mtime, behavior_path
-    XA.EBF.load_xml_file(last_behavior)
+    XA.load_xml_file(last_behavior)
     if XA.is_local_script():
         print '\nIt\'s local script!'
     else:
