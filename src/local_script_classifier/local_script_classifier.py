@@ -24,10 +24,6 @@ class xml_analyser(object):
         self.fieldnames = ['name','is_local','decision','rules','/*@cc_on','wscript.shell','shell.application','scripting.filesystemobject',\
 'window.xxx','document.xxx','xmlhttp','adodb.stream','getElementsByTagName','getElementById','<div','console','parentNode',\
 'window[xxx]','document[xxx]','$.']
-        csvfile=file('report.csv','wb')
-        writer=csv.writer(csvfile)
-        writer.writerow(self.fieldnames)
-        csvfile.close()
 
     def load_xml_file(self, xml_file):
         self.EBF.clear()
@@ -37,6 +33,9 @@ class xml_analyser(object):
         self.EBF.append_local_script_feature()
         self.EBF.append_browser_script_feature()
         self.EBF.append_other_features()
+
+    def get_fieldnames(self):
+        return self.fieldnames
 
     def check_local_script_feature(self):
         flag=0
@@ -139,6 +138,10 @@ def process_script_dir(target_path):
     
     sys.stdout = __console__
     XA = xml_analyser()
+    csvfile=file('report.csv','wb')
+    writer=csv.writer(csvfile)
+    writer.writerow(XA.get_fieldnames())
+    csvfile.close()
     cur_path = get_parent_path(sys.path[0],2)
     result_dir = os.path.join(cur_path,'third_party','wrappers','salineup_wrapper','salineup','result')
 
