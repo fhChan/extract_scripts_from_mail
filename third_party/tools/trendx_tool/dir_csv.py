@@ -14,13 +14,14 @@ Usage:
 def folder_process(folder_path):
     csvfile=file('trendx_decision.csv','wb')
     writer=csv.writer(csvfile)
-    writer.writerow(['filename','predict_value','label'])
+    writer.writerow(['filepath','predict_value','label'])
 
     m = run.JSModel() 
-    for f in os.listdir(folder_path):
-        filepath = os.path.join(folder_path, f)
-        p_value=float(m.predictfile(filepath)[0])
-        writer.writerow([f,str(p_value),str(1 if p_value>0.5 else 0)])
+    for root, dirs, files in os.walk(folder_path):
+        for f in files:
+            filepath = os.path.join(folder_path, f)
+            p_value=float(m.predictfile(filepath)[0])
+            writer.writerow([filepath,str(p_value),str(1 if p_value>0.5 else 0)])
 
 
 if __name__=='__main__':
